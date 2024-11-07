@@ -35,4 +35,4 @@ A fully documented Parking Management System developed in C++ as a comprehensive
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/SE-ParkingMgmtSystem.git
+   git clone https://github.com/Saad123Ali/SE-ParkingMgmtSystem.git
