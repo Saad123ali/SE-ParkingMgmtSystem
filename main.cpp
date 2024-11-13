@@ -230,3 +230,176 @@ public:
         }
     }
 };
+
+class Vehicle : public ErrorHandling
+{
+protected:
+    string cellNo;
+    string plateNo;
+    string parkingType;
+    int days;
+    int hours;
+    time_t parkTime;
+    time_t unparkTime;
+
+public:
+    Vehicle() {}
+
+    Vehicle(string cellNo, string plateNo, int days, int hours, string parkingType)
+        : cellNo(cellNo), plateNo(plateNo), days(days), hours(hours), parkingType(parkingType)
+    {
+        time(&parkTime); // Initialize parking start time
+    }
+
+    // Declare the setUnparkTime method
+    void setUnparkTime(time_t unparkTime)
+    {
+        this->unparkTime = unparkTime;
+    }
+
+    void parkVehicle(vector<string> &parkedPlateNumbers, int &plateCount)
+    {
+        while (true)
+        {
+            cout << "\n\t\t ______________________________________________\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t| [1]   |     Park Per Hour" << setw(22) << "|\n";
+            cout << "\t\t| [2]   |     Park Per Day" << setw(23) << "|\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t|_______|______________________________________|\n";
+
+            while (true)
+            {
+                cout << "\n\t\tEnter the parking type: ";
+                getline(cin, parkingType);
+                if (menuChoice(parkingType))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input!\n";
+            }
+            if (parkingType == "1")
+            {
+                while (true)
+                {
+                    string hourStr;
+                    cout << "\n\t\tEnter the no of hours to park the Vehicle: ";
+                    getline(cin, hourStr);
+                    if (hoursValidation(hourStr))
+                    {
+                        hours = stoi(hourStr);
+                        break;
+                    }
+                    cout << "\n\t\tInvalid hours\n";
+                }
+                break;
+            }
+            else if (parkingType == "2")
+            {
+                while (true)
+                {
+                    string dayStr;
+                    cout << "\n\t\tEnter the no of days to park the Vehicle: ";
+                    getline(cin, dayStr);
+                    if (daysValidation(dayStr))
+                    {
+                        days = stoi(dayStr);
+                        break;
+                    }
+                    cout << "\n\t\tInvalid days\n";
+                }
+                break;
+            }
+            else
+            {
+                system("CLS");
+                cout << "\n\t\tInvalid choice!\n";
+            }
+        }
+        while (true)
+        {
+            cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
+            getline(cin, cellNo);
+            if (phoneValidation(cellNo))
+            {
+                break;
+            }
+            cout << "\n\t\tInvalid Phone no.\n";
+        }
+        while (true)
+        {
+            cout << "\n\t\tEnter the plate no of the Vehicle: ";
+            getline(cin, plateNo);
+            for (int i = 0; i < plateNo.size(); i++)
+            {
+                plateNo[i] = toupper(plateNo[i]);
+            }
+            if (plateNoValidation(plateNo))
+            {
+                bool isUnique = true;
+
+                // Traditional for loop to check uniqueness
+                for (int i = 0; i < parkedPlateNumbers.size(); i++)
+                {
+                    if (parkedPlateNumbers[i] == plateNo)
+                    {
+                        isUnique = false;
+                        break;
+                    }
+                }
+
+                if (isUnique)
+                {
+                    parkedPlateNumbers.push_back(plateNo);
+                    plateCount++;
+                    break;
+                }
+                else
+                {
+                    cout << "\n\t\tPlate number already in Data-Base.\n";
+                }
+            }
+            else
+            {
+                cout << "\n\t\tInvalid plate no.\n";
+            }
+        }
+        time(&parkTime); // Set parking start time
+    }
+
+    string getPlateNo()
+    {
+        return plateNo;
+    }
+
+    int getDays()
+    {
+        return days;
+    }
+
+    int getHours()
+    {
+        return hours;
+    }
+
+    string getParkingType()
+    {
+        return parkingType;
+    }
+
+    string getCellNo()
+    {
+        return cellNo;
+    }
+
+    time_t getParkTime()
+    {
+        return parkTime;
+    }
+
+    time_t getUnparkTime()
+    {
+        return unparkTime;
+    }
+};
