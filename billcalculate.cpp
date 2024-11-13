@@ -22,3 +22,19 @@ public:
         tm *ltm = localtime(&now);
         return to_string(1900 + ltm->tm_year) + "-" + to_string(ltm->tm_mon + 1) + "-" + to_string(ltm->tm_mday) + " " + to_string(ltm->tm_hour) + ":" + to_string(ltm->tm_min) + ":" + to_string(ltm->tm_sec);
     }
+    
+    void GenerateToken()
+    {
+        srand(time(0)); // Seed for random number generator
+        token = rand() % 90000 + 100000;
+    }
+
+    int getToken()
+    {
+        return token;
+    }
+
+    double getAmount()
+    {
+        return totalAmount;
+    }
