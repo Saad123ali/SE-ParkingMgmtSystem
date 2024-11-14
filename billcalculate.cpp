@@ -38,3 +38,152 @@ public:
     {
         return totalAmount;
     }
+
+    void calculateBill(string vehicleType)
+    {
+        time_t currentTime;
+        time(&currentTime);
+        double seconds = difftime(currentTime, getParkTime());
+        double hoursParked = ceil(seconds / 3600.0);
+        double daysParked = ceil(seconds / (24 * 3600.0));
+
+        if (vehicleType == "Car")
+        {
+            if (parkingType == "2")
+            {
+                if (daysParked > days)
+                {
+                    fine = (daysParked - days) * 50;
+                    totalAmount = daysParked * 70 + fine;
+                }
+                else
+                {
+                    totalAmount = days * 70;
+                }
+            }
+            else if (parkingType == "1")
+            {
+                if (hoursParked > hours)
+                {
+                    fine = (hoursParked - hours) * 50;
+                    totalAmount = hoursParked * 70 + fine;
+                }
+                else
+                {
+                    totalAmount = hours * 70;
+                }
+            }
+        }
+        else if (vehicleType == "Bus")
+        {
+            if (parkingType == "2")
+            {
+                if (daysParked > days)
+                {
+                    fine = (daysParked - days) * 70;
+                    totalAmount = daysParked * 100 + fine;
+                }
+                else
+                {
+                    totalAmount = days * 100;
+                }
+            }
+            else if (parkingType == "1")
+            {
+                if (hoursParked > hours)
+                {
+                    fine = (hoursParked - hours) * 70;
+                    totalAmount = hoursParked * 100 + fine;
+                }
+                else
+                {
+                    totalAmount = hours * 100;
+                }
+            }
+        }
+        else if (vehicleType == "Bike")
+        {
+            if (parkingType == "2")
+            {
+                if (daysParked > days)
+                {
+                    fine = (daysParked - days) * 30;
+                    totalAmount = daysParked * 50 + fine;
+                }
+                else
+                {
+                    totalAmount = days * 50;
+                }
+            }
+            else if (parkingType == "1")
+            {
+                if (hoursParked > hours)
+                {
+                    fine = (hoursParked - hours) * 30;
+                    totalAmount = hoursParked * 50 + fine;
+                }
+                else
+                {
+                    totalAmount = hours * 50;
+                }
+            }
+        }
+    }
+
+    void displayBill(bool isParked)
+    {
+        system("CLS");
+        cout << "\n*************** Parking Bill ***************\n";
+        if (isParked)
+            cout << "Time of Entry     : " << GetCurrentTime() << "\n";
+        else
+            cout << "Exit Time         : " << GetCurrentTime() << "\n";
+        cout << "Phone Number      : " << cellNo << "\n";
+
+        cout << "Plate Number      : " << plateNo << "\n";
+        if (parkingType == "2")
+            cout << "Days Parked       : " << days << " Days" << "\n";
+        else if (parkingType == "1")
+            cout << "Hours Parked      : " << hours << " Hours" << "\n";
+        cout << "Token Number      : " << token << "\n";
+        cout << "Fine Amount       : Rs." << fine << "\n";
+        cout << "Total Amount      : Rs." << totalAmount << "\n";
+        cout << "********************************************\n";
+    }
+
+    void AskForPayment()
+    {
+        string amountStr;
+        while (true)
+        {
+            while (true)
+            {
+                cout << "Enter the payment amount: Rs.";
+                getline(cin, amountStr);
+                if (amountValid(amountStr))
+                {
+                    break;
+                }
+                cout << "Invalid amount!\n";
+            }
+            amount = stod(amountStr);
+            if (amount >= totalAmount)
+            {
+                extraAmount = amount - totalAmount;
+                if (extraAmount > 0)
+                {
+                    cout << "Thank you for Parking here!\n --> Your change: Rs. " << extraAmount << "\n";
+                }
+                else
+                {
+                    cout << "Thank you for Parking here!\n";
+                }
+                break;
+            }
+            else
+            {
+                cout << "Insufficient payment. Please enter the correct amount.\n";
+            }
+        }
+    }
+};
