@@ -1,2 +1,0 @@
-Type,Plate No,Token No,Amount,Paid,Parked Time,Unparked Time
-Car,ASD 123,129384,70,Yes,2024-11-10 01:26:53 PM,2024-11-10 01:27:15 PM
