@@ -1,7 +1,11 @@
 #include <string>
+#include <unordered_map>
 #include <iostream>
 #include <conio.h>
-
+#include <algorithm>
+#include <ctime>
+#include <cmath>
+#include <iomanip>
 
 class ErrorHandling
 {
@@ -307,3 +311,98 @@ public:
         password = pass;
     }
 };
+
+    bool ratesValid(string &amount)
+    {
+        if (amount.empty())
+        {
+            return false;
+        }
+
+        for (char c : amount)
+        {
+            if (!isdigit(c)) // Only digits are allowed
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void setUnparkTime(time_t unparkTime)
+
+    template <typename T>
+    void parkVehicle(unordered_map<string, T> &parkedVehicles)
+    {
+        while (true)
+
+        while (!enter)
+        {
+            ch = _getch();
+
+            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
+            {
+                pass[i] = ch;
+                if (show)
+                {
+                    cout << ch;
+                }
+                else
+                {
+                    cout << "*";
+                }
+                i++;
+            }
+
+            if (ch == '\b' && i >= 1)
+            {
+                cout << "\b \b";
+                i--;
+            }
+
+            if (ch == '\r')
+            {
+                enter = true;
+            }
+
+            if (plateNoValidation(plateNo))
+            {
+                if (parkedVehicles.find(plateNo) == parkedVehicles.end())
+                {
+                    parkedVehicles[plateNo] = static_cast<T &>(*this);
+                    break;
+                }
+                else
+                {
+                    cout << "\n\t\tPlate number already in the database for this vehicle type.\n";
+
+
+            if (ch == '\t')
+            {
+                show = !show;
+                cout << "\r" << promptText;
+                for (int j = 0; j < i; j++)
+                {
+                    cout << (show ? pass[j] : '*');
+
+                }
+            }
+        }
+        time(&parkTime); // Set parking start time
+    }
+
+    string getPlateNo() const { return plateNo; }
+    int getDays() const { return days; }
+    int getHours() const { return hours; }
+    string getParkingType() const { return parkingType; }
+    string getCellNo() const { return cellNo; }
+    time_t getParkTime() const { return parkTime; }
+    time_t getUnparkTime() const { return unparkTime; }
+};
+
+        pass[i] = '\0';
+        password = pass;
+    }
+};
+
