@@ -1,11 +1,16 @@
-#include <string>
 #include <unordered_map>
+#include <string>
 #include <iostream>
-#include <conio.h>
-#include <algorithm>
+#include <iomanip>
 #include <ctime>
 #include <cmath>
-#include <iomanip>
+#include <vector>
+#include <algorithm>
+#include <conio.h>
+#include <fstream>
+#include <sstream>
+
+using namespace std;
 
 class ErrorHandling
 {
@@ -312,60 +317,110 @@ public:
     }
 };
 
-    bool ratesValid(string &amount)
+class Vehicle : public ErrorHandling
+{
+protected:
+    string cellNo;
+    string plateNo;
+    string parkingType;
+    int days;
+    int hours;
+    time_t parkTime;
+    time_t unparkTime;
+
+public:
+    Vehicle() {}
+
+    Vehicle(string cellNo, string plateNo, int days, int hours, string parkingType)
+        : cellNo(cellNo), plateNo(plateNo), days(days), hours(hours), parkingType(parkingType)
     {
-        if (amount.empty())
-        {
-            return false;
-        }
-
-        for (char c : amount)
-        {
-            if (!isdigit(c)) // Only digits are allowed
-            {
-                return false;
-            }
-        }
-
-        return true;
+        time(&parkTime); // Initialize parking start time
     }
 
     void setUnparkTime(time_t unparkTime)
+    {
+        this->unparkTime = unparkTime;
+    }
 
     template <typename T>
     void parkVehicle(unordered_map<string, T> &parkedVehicles)
     {
         while (true)
-
-        while (!enter)
         {
-            ch = _getch();
+            cout << "\n\t\t ______________________________________________\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t| [1]   |     Park Per Hour" << setw(22) << "|\n";
+            cout << "\t\t| [2]   |     Park Per Day" << setw(23) << "|\n";
+            cout << "\t\t|       |" << setw(40) << "|\n";
+            cout << "\t\t|_______|______________________________________|\n";
 
-            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
+            while (true)
             {
-                pass[i] = ch;
-                if (show)
+                cout << "\n\t\tEnter the parking type: ";
+                getline(cin, parkingType);
+                if (menuChoice(parkingType))
                 {
-                    cout << ch;
+                    break;
                 }
-                else
+                cout << "\n\t\tInvalid input!\n";
+            }
+            if (parkingType == "1")
+            {
+                while (true)
                 {
-                    cout << "*";
+                    string hourStr;
+                    cout << "\n\t\tEnter the no of hours to park the Vehicle: ";
+                    getline(cin, hourStr);
+                    if (hoursValidation(hourStr))
+                    {
+                        hours = stoi(hourStr);
+                        break;
+                    }
+                    cout << "\n\t\tInvalid hours\n";
                 }
-                i++;
+                break;
             }
-
-            if (ch == '\b' && i >= 1)
+            else if (parkingType == "2")
             {
-                cout << "\b \b";
-                i--;
+                while (true)
+                {
+                    string dayStr;
+                    cout << "\n\t\tEnter the no of days to park the Vehicle: ";
+                    getline(cin, dayStr);
+                    if (daysValidation(dayStr))
+                    {
+                        days = stoi(dayStr);
+                        break;
+                    }
+                    cout << "\n\t\tInvalid days\n";
+                }
+                break;
             }
-
-            if (ch == '\r')
+            else
             {
-                enter = true;
+                system("CLS");
+                cout << "\n\t\tInvalid choice!\n";
             }
-
+        }
+        while (true)
+        {
+            cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
+            getline(cin, cellNo);
+            if (phoneValidation(cellNo))
+            {
+                break;
+            }
+            cout << "\n\t\tInvalid Phone no.\n";
+        }
+        while (true)
+        {
+            cout << "\n\t\tEnter the plate no of the Vehicle: ";
+            getline(cin, plateNo);
+            for (int i = 0; i < plateNo.size(); i++)
+            {
+                plateNo[i] = toupper(plateNo[i]);
+            }
             if (plateNoValidation(plateNo))
             {
                 if (parkedVehicles.find(plateNo) == parkedVehicles.end())
@@ -376,17 +431,11 @@ public:
                 else
                 {
                     cout << "\n\t\tPlate number already in the database for this vehicle type.\n";
-
-
-            if (ch == '\t')
-            {
-                show = !show;
-                cout << "\r" << promptText;
-                for (int j = 0; j < i; j++)
-                {
-                    cout << (show ? pass[j] : '*');
-
                 }
+            }
+            else
+            {
+                cout << "\n\t\tInvalid plate no.\n";
             }
         }
         time(&parkTime); // Set parking start time
@@ -400,9 +449,3 @@ public:
     time_t getParkTime() const { return parkTime; }
     time_t getUnparkTime() const { return unparkTime; }
 };
-
-        pass[i] = '\0';
-        password = pass;
-    }
-};
-
