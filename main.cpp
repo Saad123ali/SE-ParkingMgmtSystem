@@ -1,21 +1,14 @@
-#include <iostream>
 #include <string>
-#include <vector>
+#include <unordered_map>
+#include <iostream>
+#include <conio.h>
+#include <algorithm>
 #include <ctime>
 #include <cmath>
 #include <iomanip>
-#include <conio.h>
-#include <fstream>
-#include <sstream>
-
-using namespace std;
 
 class ErrorHandling
 {
-private:
-    int lettersCount;
-    int digitsCount;
-    bool spaceEncountered;
 
 public:
     bool phoneValidation(string input)
@@ -50,45 +43,61 @@ public:
 
     bool plateNoValidation(string plateNo)
     {
-        if (plateNo.empty())
+        // Remove spaces for easier processing
+        plateNo.erase(remove(plateNo.begin(), plateNo.end(), ' '), plateNo.end());
+
+        // Convert to uppercase for consistency
+        transform(plateNo.begin(), plateNo.end(), plateNo.begin(), ::toupper);
+
+        // Format checks
+        if (plateNo.length() == 6)
         {
-            return false;
+            // Format 1: ABC123
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
+                isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[5]))
+            {
+                return true;
+            }
+            // Format 2: AB1234
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) &&
+                isdigit(plateNo[2]) && isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[5]))
+            {
+                return true;
+            }
+            // Format 3: ABCD12
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) && isalpha(plateNo[3]) &&
+                isdigit(plateNo[4]) && isdigit(plateNo[5]))
+            {
+                return true;
+            }
+            // Format 6: A1234B
+            if (isalpha(plateNo[0]) &&
+                isdigit(plateNo[1]) && isdigit(plateNo[2]) && isdigit(plateNo[3]) && isdigit(plateNo[4]) &&
+                isalpha(plateNo[5]))
+            {
+                return true;
+            }
+        }
+        else if (plateNo.length() == 8) // Format 4: ABC12DEF
+        {
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
+                isdigit(plateNo[3]) && isdigit(plateNo[4]) &&
+                isalpha(plateNo[5]) && isalpha(plateNo[6]) && isalpha(plateNo[7]))
+            {
+                return true;
+            }
+        }
+        else if (plateNo.length() == 7) // Format 5: AB123CD
+        {
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) &&
+                isdigit(plateNo[2]) && isdigit(plateNo[3]) && isdigit(plateNo[4]) &&
+                isalpha(plateNo[5]) && isalpha(plateNo[6]))
+            {
+                return true;
+            }
         }
 
-        lettersCount = 0;
-        digitsCount = 0;
-        spaceEncountered = false;
-
-        for (int i = 0; i < plateNo.size(); i++)
-        {
-            if (isalpha(plateNo[i]))
-            {
-                lettersCount++;
-            }
-            else if (isdigit(plateNo[i]))
-            {
-                digitsCount++;
-            }
-            else if (plateNo[i] == ' ')
-            {
-                if (spaceEncountered || lettersCount < 2 || lettersCount > 6)
-                {
-                    return false;
-                }
-                spaceEncountered = true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        if (!spaceEncountered || lettersCount < 2 || lettersCount > 6 || digitsCount < 3 || digitsCount > 4)
-        {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     bool hoursValidation(string idString)
@@ -229,6 +238,78 @@ public:
             plateNo[i] = toupper(plateNo[i]);
         }
     }
+
+    bool ratesValid(string &amount)
+    {
+        if (amount.empty())
+        {
+            return false;
+        }
+
+        for (char c : amount)
+        {
+            if (!isdigit(c)) // Only digits are allowed
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void passLogic(string &password, string promptText)
+    {
+        char pass[32] = {0};
+        char ch;
+        bool enter = false;
+        int i = 0;
+        bool show = false;
+
+        cout << promptText;
+
+        while (!enter)
+        {
+            ch = _getch();
+
+            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
+            {
+                pass[i] = ch;
+                if (show)
+                {
+                    cout << ch;
+                }
+                else
+                {
+                    cout << "*";
+                }
+                i++;
+            }
+
+            if (ch == '\b' && i >= 1)
+            {
+                cout << "\b \b";
+                i--;
+            }
+
+            if (ch == '\r')
+            {
+                enter = true;
+            }
+
+            if (ch == '\t')
+            {
+                show = !show;
+                cout << "\r" << promptText;
+                for (int j = 0; j < i; j++)
+                {
+                    cout << (show ? pass[j] : '*');
+                }
+            }
+        }
+
+        pass[i] = '\0';
+        password = pass;
+    }
 };
 
 class Vehicle : public ErrorHandling
@@ -251,13 +332,13 @@ public:
         time(&parkTime); // Initialize parking start time
     }
 
-    // Declare the setUnparkTime method
     void setUnparkTime(time_t unparkTime)
     {
         this->unparkTime = unparkTime;
     }
 
-    void parkVehicle(vector<string> &parkedPlateNumbers, int &plateCount)
+    template <typename T>
+    void parkVehicle(unordered_map<string, T> &parkedVehicles)
     {
         while (true)
         {
@@ -337,27 +418,14 @@ public:
             }
             if (plateNoValidation(plateNo))
             {
-                bool isUnique = true;
-
-                // Traditional for loop to check uniqueness
-                for (int i = 0; i < parkedPlateNumbers.size(); i++)
+                if (parkedVehicles.find(plateNo) == parkedVehicles.end())
                 {
-                    if (parkedPlateNumbers[i] == plateNo)
-                    {
-                        isUnique = false;
-                        break;
-                    }
-                }
-
-                if (isUnique)
-                {
-                    parkedPlateNumbers.push_back(plateNo);
-                    plateCount++;
+                    parkedVehicles[plateNo] = static_cast<T &>(*this);
                     break;
                 }
                 else
                 {
-                    cout << "\n\t\tPlate number already in Data-Base.\n";
+                    cout << "\n\t\tPlate number already in the database for this vehicle type.\n";
                 }
             }
             else
@@ -368,38 +436,11 @@ public:
         time(&parkTime); // Set parking start time
     }
 
-    string getPlateNo()
-    {
-        return plateNo;
-    }
-
-    int getDays()
-    {
-        return days;
-    }
-
-    int getHours()
-    {
-        return hours;
-    }
-
-    string getParkingType()
-    {
-        return parkingType;
-    }
-
-    string getCellNo()
-    {
-        return cellNo;
-    }
-
-    time_t getParkTime()
-    {
-        return parkTime;
-    }
-
-    time_t getUnparkTime()
-    {
-        return unparkTime;
-    }
+    string getPlateNo() const { return plateNo; }
+    int getDays() const { return days; }
+    int getHours() const { return hours; }
+    string getParkingType() const { return parkingType; }
+    string getCellNo() const { return cellNo; }
+    time_t getParkTime() const { return parkTime; }
+    time_t getUnparkTime() const { return unparkTime; }
 };
