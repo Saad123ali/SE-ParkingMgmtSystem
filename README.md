@@ -24,6 +24,13 @@ A fully documented Parking Management System developed in C++ as a comprehensive
 - **Database**: File handling or SQL database integration (optional)
 - **Development Tools**: IDEs (e.g., Visual Studio, Code::Blocks)
 
+## Authors
+
+- [@Saad Ali](https://github.com/Saad123ali)
+- [Ghazanfar Pasha](https://github.com/pasha6063)
+- [Hamza Hashmi](https://github.com/fax9)
+
+
 ## Getting Started
 
 ### Prerequisites
