@@ -449,7 +449,6 @@ public:
     time_t getParkTime() const { return parkTime; }
     time_t getUnparkTime() const { return unparkTime; }
 };
-
 class BillCalculate : public Vehicle
 {
 public:
@@ -473,9 +472,8 @@ private:
     int token;
     double amount;
     double extraAmount;
-    bool paymentSuccess;
     double fine;
-    unordered_map<int, bool> generatedTokens; // Map to store unique tokens
+    unordered_map<int, bool> generatedTokens;
 
 protected:
     double totalAmount;
@@ -483,9 +481,6 @@ protected:
 public:
     BillCalculate(int _token = 0, double _fine = 0.0, double _amount = 0.0, double _totalAmount = 0.0, double _extraAmount = 0.0)
         : Vehicle(), token(_token), fine(_fine), amount(_amount), totalAmount(_totalAmount), extraAmount(_extraAmount) {}
-
-    BillCalculate(int _token, string _cellNo, string _plateNo, int _days, int _hours, string _parkingType)
-        : Vehicle(_cellNo, _plateNo, _days, _hours, _parkingType), token(_token), fine(0), totalAmount(0) {}
 
     string GetCurrentTime()
     {
@@ -496,152 +491,72 @@ public:
 
     void GenerateToken()
     {
-        srand(time(0)); // Seed for random number generator
+        srand(time(0));
         do
         {
-            token = rand() % 90000 + 100000; // Generate a token in the range 100000 to 999999
-        } while (generatedTokens.find(token) != generatedTokens.end()); // Check for duplicates
-        generatedTokens[token] = true; // Store the newly generated token
+            token = rand() % 90000 + 100000;
+        } while (generatedTokens.find(token) != generatedTokens.end());
+        generatedTokens[token] = true;
     }
+
     int getToken() const
     {
         return token;
     }
 
-    double getAmount()
-    {
-        return totalAmount;
-    }
-
     double calculateOverstayTime(time_t entryTime, int allocatedHours, int allocatedDays)
     {
-        // Get the current time
         time_t currentTime;
         time(&currentTime);
 
-        // Calculate total parked time in seconds
         double secondsParked = difftime(currentTime, entryTime);
+        double hoursParked = secondsParked / 3600.0;
+        double daysParked = secondsParked / (24 * 3600.0);
 
-        // Convert parked time to hours and days
-        double hoursParked = ceil(secondsParked / 3600.0);
-        double daysParked = ceil(secondsParked / (24 * 3600.0));
+        double overstayHours = max(0.0, hoursParked - allocatedHours);
+        double overstayDays = max(0.0, daysParked - allocatedDays);
 
-        // Calculate overstay time in hours and days
-        double overstayHours = hoursParked - allocatedHours;
-        double overstayDays = daysParked - allocatedDays;
-
-        // Ensure overstay time is not negative
-        if (overstayHours < 0)
-        {
-            overstayHours = 0;
-        }
-        if (overstayDays < 0)
-        {
-            overstayDays = 0;
-        }
-
-        // Return the maximum overstay time
-        return max(overstayHours, overstayDays);
+        return (allocatedDays > 0) ? overstayDays : overstayHours;
     }
-
     void calculateBill(string vehicleType, const RateConfig &rates)
     {
-        time_t currentTime;
-        time(&currentTime);
         double overstayHours = 0;
         double overstayDays = 0;
+        double totalHoursParked = 0;
+        double totalDaysParked = 0;
+
+        time_t currentTime;
+        time(&currentTime);
+
+        double secondsParked = difftime(currentTime, getParkTime());
+        totalHoursParked = secondsParked / 3600.0;
+        totalDaysParked = secondsParked / (24 * 3600.0);
 
         if (parkingType == "1")
-        {
-            // Calculate overstay for hourly parking
-            overstayHours = calculateOverstayTime(getParkTime(), hours, 0);
+        {                                                  // Hourly Parking
+            totalHoursParked = max(1.0, totalHoursParked); // Ensure at least one hour is charged
+            overstayHours = max(0.0, totalHoursParked - hours);
+            totalAmount = (min(totalHoursParked, (double)hours) * rates.carHourlyRate) + (overstayHours * rates.carHourlyFineRate);
         }
         else if (parkingType == "2")
-        {
-            // Calculate overstay for daily parking
-            overstayDays = calculateOverstayTime(getParkTime(), 0, days);
+        {                                                // Daily Parking
+            totalDaysParked = max(1.0, totalDaysParked); // Ensure at least one day is charged
+            overstayDays = max(0.0, totalDaysParked - days);
+            totalAmount = (min(totalDaysParked, (double)days) * rates.carDailyRate) + (overstayDays * rates.carDailyFineRate);
         }
 
+        // Apply the appropriate rates based on vehicle type
         if (vehicleType == "Car")
         {
-            if (parkingType == "2")
-            {
-                if (overstayDays > 0)
-                {
-                    fine = overstayDays * rates.carDailyFineRate;
-                    totalAmount = (days * rates.carDailyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = days * rates.carDailyRate;
-                }
-            }
-            else if (parkingType == "1")
-            {
-                if (overstayHours > 0)
-                {
-                    fine = overstayHours * rates.carHourlyFineRate;
-                    totalAmount = (hours * rates.carHourlyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = hours * rates.carHourlyRate;
-                }
-            }
+            totalAmount += overstayHours * rates.carHourlyFineRate + overstayDays * rates.carDailyFineRate;
         }
         else if (vehicleType == "Bus")
         {
-            if (parkingType == "2")
-            {
-                if (overstayDays > 0)
-                {
-                    fine = overstayDays * rates.busDailyFineRate;
-                    totalAmount = (days * rates.busDailyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = days * rates.busDailyRate;
-                }
-            }
-            else if (parkingType == "1")
-            {
-                if (overstayHours > 0)
-                {
-                    fine = overstayHours * rates.busHourlyFineRate;
-                    totalAmount = (hours * rates.busHourlyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = hours * rates.busHourlyRate;
-                }
-            }
+            totalAmount += overstayHours * rates.busHourlyFineRate + overstayDays * rates.busDailyFineRate;
         }
         else if (vehicleType == "Bike")
         {
-            if (parkingType == "2")
-            {
-                if (overstayDays > 0)
-                {
-                    fine = overstayDays * rates.bikeDailyFineRate;
-                    totalAmount = (days * rates.bikeDailyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = days * rates.bikeDailyRate;
-                }
-            }
-            else if (parkingType == "1")
-            {
-                if (overstayHours > 0)
-                {
-                    fine = overstayHours * rates.bikeHourlyFineRate;
-                    totalAmount = (hours * rates.bikeHourlyRate) + fine;
-                }
-                else
-                {
-                    totalAmount = hours * rates.bikeHourlyRate;
-                }
-            }
+            totalAmount += overstayHours * rates.bikeHourlyFineRate + overstayDays * rates.bikeDailyFineRate;
         }
     }
 
@@ -649,15 +564,16 @@ public:
     {
         system("CLS");
         cout << "\n*************** Parking Bill ***************\n";
+
         if (isParked)
         {
             cout << "Time of Entry     : " << GetCurrentTime() << "\n";
             cout << "Phone Number      : " << cellNo << "\n";
             cout << "Plate Number      : " << plateNo << "\n";
             if (parkingType == "2")
-                cout << "Days Parked       : " << days << " Days" << "\n";
+                cout << "Allocated Days    : " << days << " Days" << "\n";
             else if (parkingType == "1")
-                cout << "Hours Parked      : " << hours << " Hours" << "\n";
+                cout << "Allocated Hours   : " << hours << " Hours" << "\n";
             cout << "Token Number      : " << token << "\n";
             cout << "Amount            : Rs." << totalAmount << "\n"; // Show amount when parked
         }
@@ -666,10 +582,21 @@ public:
             cout << "Exit Time         : " << GetCurrentTime() << "\n";
             cout << "Phone Number      : " << cellNo << "\n";
             cout << "Plate Number      : " << plateNo << "\n";
+
+            time_t currentTime;
+            time(&currentTime);
+
+            double secondsParked = difftime(currentTime, getParkTime());
+            double totalHoursParked = secondsParked / 3600.0;
+            double totalDaysParked = secondsParked / (24 * 3600.0);
+
             if (parkingType == "2")
             {
-                cout << "Days Parked       : " << days << " Days" << "\n";
-                double overstayDays = ceil(difftime(time(0), getParkTime()) / (24 * 3600.0)) - days;
+                double parkedDays = max(1.0, totalDaysParked); // Ensure at least one day is charged
+                cout << "Allocated Days    : " << days << " Days" << "\n";
+                cout << "Days Parked       : " << parkedDays << " Days" << "\n";
+
+                double overstayDays = ceil(totalDaysParked) - days;
                 if (overstayDays > 0)
                 {
                     cout << "Overstay Days     : " << overstayDays << " Days" << "\n";
@@ -678,8 +605,11 @@ public:
             }
             else if (parkingType == "1")
             {
-                cout << "Hours Parked      : " << hours << " Hours" << "\n";
-                double overstayHours = ceil(difftime(time(0), getParkTime()) / 3600.0) - hours;
+                double parkedHours = max(1.0, totalHoursParked); // Ensure at least one hour is charged
+                cout << "Allocated Hours   : " << hours << " Hours" << "\n";
+                cout << "Hours Parked      : " << parkedHours << " Hours" << "\n";
+
+                double overstayHours = ceil(totalHoursParked) - hours;
                 if (overstayHours > 0)
                 {
                     cout << "Overstay Hours    : " << overstayHours << " Hours" << "\n";
@@ -697,37 +627,43 @@ public:
         string amountStr;
         while (true)
         {
-            while (true)
+            cout << "Enter the payment amount: Rs.";
+            getline(cin, amountStr);
+
+            if (amountValid(amountStr))
             {
-                cout << "Enter the payment amount: Rs.";
-                getline(cin, amountStr);
-                if (amountValid(amountStr))
+                amount = stod(amountStr);
+                if (amount >= totalAmount)
                 {
+                    extraAmount = amount - totalAmount;
+                    if (extraAmount > 0)
+                    {
+                        cout << "Thank you for Parking here!\n --> Your change: Rs. " << extraAmount << "\n";
+                    }
+                    else
+                    {
+                        cout << "Thank you for Parking here!\n";
+                    }
                     break;
-                }
-                cout << "Invalid amount!\n";
-            }
-            amount = stod(amountStr);
-            if (amount >= totalAmount)
-            {
-                extraAmount = amount - totalAmount;
-                if (extraAmount > 0)
-                {
-                    cout << "Thank you for Parking here!\n --> Your change: Rs. " << extraAmount << "\n";
                 }
                 else
                 {
-                    cout << "Thank you for Parking here!\n";
+                    cout << "Insufficient payment. Please enter the correct amount.\n";
                 }
-                break;
             }
             else
             {
-                cout << "Insufficient payment. Please enter the correct amount.\n";
+                cout << "Invalid amount!\n";
             }
         }
     }
+
+    double getAmount() const
+    {
+        return totalAmount;
+    }
 };
+
 class Car : public BillCalculate
 {
 private:
