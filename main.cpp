@@ -405,4 +405,93 @@ public:
         password = pass;
     }
 };
+class Car : public BillCalculate
+{
+private:
+    double fine = 0.0;
 
+public:
+    void setFine(double fineAmount)
+    {
+        fine = fineAmount;
+    }
+
+    void updateTotalAmount()
+    {
+        totalAmount = getAmount() + fine;
+    }
+
+    double getFine() const
+    {
+        return fine;
+    }
+
+    void carPark(unordered_map<string, Car> &cars, const RateConfig &rates)
+    {
+        parkVehicle(cars);
+        GenerateToken();
+        calculateBill("Car", rates);
+        displayBill(true);
+    }
+};
+
+class Bus : public BillCalculate
+{
+
+private:
+    double fine = 0.0;
+
+public:
+    void setFine(double fineAmount)
+    {
+        fine = fineAmount;
+    }
+
+    void updateTotalAmount()
+    {
+        totalAmount = getAmount() + fine;
+    }
+
+    double getFine() const
+    {
+        return fine;
+    }
+
+    void busPark(unordered_map<string, Bus> &buses, const RateConfig &rates)
+    {
+        parkVehicle(buses);
+        GenerateToken();
+        calculateBill("Bus", rates);
+        displayBill(true);
+    }
+};
+
+class Bike : public BillCalculate
+{
+private:
+    double fine = 0.0;
+
+public:
+    void setFine(double fineAmount)
+    {
+        fine = fineAmount;
+    }
+
+    void updateTotalAmount()
+    {
+        totalAmount = getAmount() + fine;
+    }
+
+    double getFine() const
+    {
+        return fine;
+    }
+
+    void bikePark(unordered_map<string, Bike> &bikes, const RateConfig &rates)
+    {
+        parkVehicle(bikes);
+        GenerateToken();
+        calculateBill("Bike", rates);
+        displayBill(true);
+    }
+};
