@@ -575,7 +575,6 @@ public:
             else if (parkingType == "1")
                 cout << "Allocated Hours   : " << hours << " Hours" << "\n";
             cout << "Token Number      : " << token << "\n";
-            cout << "Amount            : Rs." << totalAmount << "\n"; // Show amount when parked
         }
         else
         {
@@ -780,140 +779,10 @@ private:
         return string(buffer);
     }
 
-    time_t stringToTime(const string &timeStr) const
-    {
-        struct tm timeinfo = {};
-        istringstream ss(timeStr);
-        ss >> get_time(&timeinfo, "%Y-%m-%d %I:%M:%S %p");
-        return mktime(&timeinfo);
-    }
-
-    void saveToFile() const
-    {
-        ofstream outFile("payment_data.txt");
-        if (!outFile)
-        {
-            cerr << "Error: Unable to open file for saving payment records." << endl;
-            return;
-        }
-
-        // Add formatted header and divider
-        outFile << "\n\n\t\t\t*************** Payment Records ***************\n\n";
-        outFile << setw(10) << "Type" << setw(12) << "Plate No" << setw(18) << "Token No"
-                << setw(15) << "Amount" << setw(10) << "Paid"
-                << setw(30) << "Park Date & Time" << setw(30) << "Unpark Date & Time"
-                << setw(15) << "Cell No" << endl;
-        outFile << "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
-
-        // Save each payment record in formatted form
-        for (const auto &entry : payments)
-        {
-            const PaymentInfo &info = entry.second;
-            outFile << setw(10) << info.vehicleType
-                    << setw(12) << entry.first.substr(entry.first.find('-') + 1) // Extract plate number from key
-                    << setw(18) << info.token
-                    << setw(12) << "Rs : " << info.amount << setw(10) << (info.paid ? "Yes" : "No")
-                    << setw(30) << timeTostring(info.parkTime);
-
-            if (info.paid)
-            {
-                outFile << setw(30) << timeTostring(info.unparkTime); // Unpark Time
-            }
-            else
-            {
-                outFile << setw(30) << "N/A"; // Unpark time is not available
-            }
-
-            outFile << setw(20) << info.cellNumber << endl;
-        }
-
-        // Add footer with total amount
-        outFile << "\n***********************************************************************************************************************************************\n";
-        outFile << "\n\tTotal Amount: Rs : " << totalAmount << "\n";
-
-        outFile.close();
-    }
-
-    void loadFromFile()
-    {
-        ifstream inFile("payment_data.txt");
-        if (!inFile)
-        {
-            cerr << "No existing payment records found. Starting fresh." << endl;
-            return;
-        }
-
-        payments.clear();
-        totalAmount = 0.0;
-
-        string line;
-        bool isHeaderSection = true; // Tracks whether we're still in the header
-
-        while (getline(inFile, line))
-        {
-            // Ignore header, dividers, and footers
-            if (line.empty() || line.find("***************") != string::npos ||
-                line.find("----------------------------------------------------------------") != string::npos ||
-                line.find("Total Amount:") != string::npos)
-            {
-                continue;
-            }
-
-            // Ignore column titles
-            if (isHeaderSection && line.find("Type") != string::npos)
-            {
-                isHeaderSection = false; // Transition out of the header section
-                continue;
-            }
-
-            // Parse payment record
-            stringstream ss(line);
-            string vehicleType, plateNo, tokenStr, amountStr, paidStr, parkTimeStr, unparkTimeStr, cellNumber;
-
-            ss >> vehicleType;
-            ss >> plateNo;
-            ss >> tokenStr;
-            ss.ignore(5, ':'); // Skip "Rs :" in amount
-            ss >> amountStr;
-            ss >> paidStr;
-            ss >> ws;                         // Ignore leading whitespace before date
-            getline(ss, parkTimeStr, '\t');   // Extract park time
-            getline(ss, unparkTimeStr, '\t'); // Extract unpark time
-            ss >> cellNumber;
-
-            try
-            {
-                PaymentInfo info;
-                info.token = stoi(tokenStr);
-                info.amount = stod(amountStr);
-                info.paid = (paidStr == "Yes");
-                info.parkTime = stringToTime(parkTimeStr);
-                info.unparkTime = (unparkTimeStr != "N/A") ? stringToTime(unparkTimeStr) : 0;
-                info.vehicleType = vehicleType;
-                info.cellNumber = cellNumber;
-
-                string key = vehicleType + "-" + plateNo;
-                payments[key] = info;
-            }
-            catch (const exception &e)
-            {
-                cerr << "Error: Malformed line in file. Skipping: " << line << endl;
-            }
-        }
-
-        inFile.close();
-    }
+    
 
 public:
-    PaymentRecord() : totalAmount(0.0)
-    {
-        loadFromFile(); // Load records from file during initialization
-    }
-
-    ~PaymentRecord()
-    {
-        saveToFile(); // Save records to file upon destruction
-    }
+    PaymentRecord() : totalAmount(0.0) {}
 
     void recordPayment(const string &plateNo, const string &vehicleType, int token, double amount, time_t parkTime, time_t unparkTime, bool isPaid, const string &cellNumber)
     {
@@ -923,7 +792,6 @@ public:
         {
             totalAmount += amount;
         }
-        saveToFile();
     }
 
     void updatePaymentRecord(const string &plateNo, const string &vehicleType, int token, double amount, time_t unparkTime)
@@ -935,7 +803,6 @@ public:
             payments[key].unparkTime = unparkTime;
             totalAmount += amount;
         }
-        saveToFile();
     }
 
     void displayPayments() const
@@ -985,7 +852,6 @@ public:
 
         payments.clear();
         totalAmount = 0.0;
-        saveToFile(); // Save empty records
         cout << "All payment records have been deleted." << endl;
     }
 
@@ -997,7 +863,6 @@ public:
         {
             totalAmount -= it->second.amount;
             payments.erase(it);
-            saveToFile(); // Save updated records
             cout << "Payment record for plate number " << plateNo << " has been deleted." << endl;
         }
         else
@@ -1052,8 +917,6 @@ public:
                         {
                             totalAmount -= withDrawAmount;
                             cout << "Rs " << withDrawAmount << " has been successfully withdrawn. Remaining balance: Rs " << totalAmount << endl;
-                            // Save the updated total amount to the file
-                            saveToFile(); // Make sure you save the updated payment record after withdrawal
                             return;       // Exit the function after successful withdrawal
                         }
                     }
