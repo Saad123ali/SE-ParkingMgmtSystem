@@ -1,0 +1,138 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="1036" dy="614" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="TEgpN5ifqae03Chc3j9u-0" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="91" y="188" width="37" height="69" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-2" value="Park vehicle" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="225" y="140" width="99" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-3" value="Make payment" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="220" y="292" width="109" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-4" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="133" y="223" as="sourcePoint" />
+            <mxPoint x="220" y="175" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-5" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="135" y="238" as="sourcePoint" />
+            <mxPoint x="219" y="241" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-6" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;Select vehicle type&amp;nbsp;&lt;/font&gt;&lt;div style=&quot;font-size: 11px;&quot;&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;parking duration enter vehicle detail&lt;/font&gt;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="421" y="113" width="137" height="63" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-7" value="Un-park vehicle" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="225" y="214" width="99" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-8" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="142" y="254" as="sourcePoint" />
+            <mxPoint x="218" y="299" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-10" value="&lt;font style=&quot;font-size: 7px;&quot;&gt;&amp;lt;&amp;lt;Include &amp;gt;&amp;gt;&lt;/font&gt;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" target="TEgpN5ifqae03Chc3j9u-6">
+          <mxGeometry x="0.0159" relative="1" as="geometry">
+            <mxPoint x="331" y="165" as="sourcePoint" />
+            <mxPoint x="394" y="165" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-11" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Display bill along Token&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="434" y="223" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-12" value="" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="TEgpN5ifqae03Chc3j9u-6" target="TEgpN5ifqae03Chc3j9u-11">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="458" y="190" as="sourcePoint" />
+            <mxPoint x="293" y="306" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-13" value="" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;exitX=0;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="TEgpN5ifqae03Chc3j9u-11">
+          <mxGeometry x="-0.0056" relative="1" as="geometry">
+            <mxPoint x="373" y="306" as="sourcePoint" />
+            <mxPoint x="325" y="185" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-14" value="Input vehicle no and token&amp;nbsp;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="441" y="306" width="106" height="51" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-15" value="&lt;font style=&quot;font-size: 8px;&quot;&gt;&amp;lt;&amp;lt; include &amp;gt;&amp;gt;&lt;/font&gt;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="245" as="sourcePoint" />
+            <mxPoint x="438" y="325" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-17" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Dsipaly bill with fee and fine&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="421" y="398" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-18" value="" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="TEgpN5ifqae03Chc3j9u-14" target="TEgpN5ifqae03Chc3j9u-17">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="373" y="346" as="sourcePoint" />
+            <mxPoint x="293" y="346" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-19" value="&lt;font style=&quot;font-size: 7px;&quot;&gt;&amp;lt;&amp;lt; include &amp;gt;&amp;gt;&lt;/font&gt;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;exitX=0;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="TEgpN5ifqae03Chc3j9u-17" target="TEgpN5ifqae03Chc3j9u-7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="373" y="346" as="sourcePoint" />
+            <mxPoint x="293" y="346" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-20" value="&lt;font style=&quot;font-size: 7px;&quot;&gt;&amp;lt;&amp;lt;include &amp;gt;&amp;gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="363" y="183" width="58" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-21" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="944" y="176" width="47" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-22" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;view / delete parking records&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="647" y="120" width="120" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-23" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;view / delete payment records&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="644" y="194" width="120" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-24" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Unblock token&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="647" y="262" width="120" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-25" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;withdraw payment&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="647" y="350" width="120" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-27" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="774" y="147" as="sourcePoint" />
+            <mxPoint x="934" y="193" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-30" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="774" y="147" as="sourcePoint" />
+            <mxPoint x="934" y="193" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-31" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" target="TEgpN5ifqae03Chc3j9u-21">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="774" y="288" as="sourcePoint" />
+            <mxPoint x="944" y="203" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-32" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="767" y="222" as="sourcePoint" />
+            <mxPoint x="954" y="213" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TEgpN5ifqae03Chc3j9u-33" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="780" y="362" as="sourcePoint" />
+            <mxPoint x="938" y="237" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
