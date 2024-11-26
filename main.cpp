@@ -1138,8 +1138,9 @@ public:
     {
         plateAttempts = 0;
         tokenAttempts = 0;
+        unParkToken;
         found = false;
-        auto carIt = cars.end(); // Declare carIt at the beginning
+        auto carIt = cars.end();
 
         if (cars.empty())
         {
@@ -1147,6 +1148,7 @@ public:
             return;
         }
 
+        // Get the plate number
         while (plateAttempts < 3)
         {
             cout << "\n\t\tEnter the plate number of the car to unpark: ";
@@ -1183,74 +1185,75 @@ public:
             return;
         }
 
-        if (found)
+        // Get the token
+        while (tokenAttempts < 3)
         {
-            while (tokenAttempts < 3)
+            cout << "\n\t\tEnter the token number of the car to unpark: ";
+            getline(cin, unParkToken);
+            if (tokenValid(unParkToken))
             {
-                cout << "\n\t\tEnter the token number of the car to unpark: ";
-                getline(cin, unParkToken);
-                if (tokenValid(unParkToken))
+                int token = stoi(unParkToken);
+
+                if (!isTokenBlocked(plateNumber, token))
                 {
-                    token = stoi(unParkToken);
-
-                    if (!isTokenBlocked(plateNumber, token))
+                    if (carIt != cars.end() && carIt->second.getToken() == token)
                     {
-                        if (carIt != cars.end() && carIt->second.getToken() == token)
+                        // Handle overstay fine
+                        double overstayTime = carIt->second.calculateOverstayTime(carIt->second.getParkTime(), carIt->second.getHours(), carIt->second.getDays());
+                        if (overstayTime > 0)
                         {
-                            // Calculate overstay time using the Car instance
-                            double overstayTime = carIt->second.calculateOverstayTime(carIt->second.getParkTime(), carIt->second.getHours(), carIt->second.getDays());
-
-                            // Apply fines if there is overstay
-                            if (overstayTime > 0)
-                            {
-                                if (carIt->second.getParkingType() == "2")
-                                {
-                                    carIt->second.setFine(overstayTime * rates.carDailyFineRate);
-                                }
-                                else if (carIt->second.getParkingType() == "1")
-                                {
-                                    carIt->second.setFine(overstayTime * rates.carHourlyFineRate);
-                                }
-                                carIt->second.updateTotalAmount();
+                            if (carIt->second.getParkingType() == "2")
+                            { // Daily parking
+                                carIt->second.setFine(overstayTime * rates.carDailyFineRate);
+                            }
+                            else if (carIt->second.getParkingType() == "1")
+                            { // Hourly parking
+                                carIt->second.setFine(overstayTime * rates.carHourlyFineRate);
                             }
 
-                            carIt->second.displayBill(false);
-                            carIt->second.AskForPayment();
-                            time_t unparkTime;
-                            time(&unparkTime);
-                            carIt->second.setUnparkTime(unparkTime);
-                            payment.updatePaymentRecord(carIt->second.getPlateNo(), "Car", token, carIt->second.getAmount(), carIt->second.getUnparkTime());
+                            carIt->second.updateTotalAmount();
+                        }
 
-                            unparkedCars[plateNumber] = carIt->second;
-                            cars.erase(carIt);
-                            removePlateNumber(plateNumber);
-                            cout << "\n\t\tCar unparked successfully!\n";
-                            return;
-                        }
-                        else
-                        {
-                            cout << "\n\t\tInvalid token number. Please try again.\n";
-                            tokenAttempts++;
-                        }
+                        // Process payment
+                        carIt->second.displayBill(false);
+                        carIt->second.AskForPayment();
+
+                        // Record payment
+                        time_t unparkTime;
+                        time(&unparkTime);
+                        carIt->second.setUnparkTime(unparkTime);
+                        payment.updatePaymentRecord(carIt->second.getPlateNo(), "Car", token, carIt->second.getAmount(), carIt->second.getUnparkTime());
+
+                        // Move to unparkedCars and remove from parked
+                        unparkedCars[plateNumber] = carIt->second;
+                        cars.erase(carIt);
+
+                        cout << "\n\t\tCar unparked successfully!\n";
+                        return;
                     }
                     else
                     {
-                        cout << "\n\t\tToken is currently blocked. Please contact admin to unblock.\n";
-                        return;
+                        cout << "\n\t\tInvalid token number. Please try again.\n";
+                        tokenAttempts++;
                     }
                 }
                 else
                 {
-                    cout << "\n\t\tInvalid input. Please enter a valid token number.\n";
-                    tokenAttempts++;
+                    cout << "\n\t\tToken is currently blocked. Please contact admin to unblock.\n";
+                    return;
                 }
             }
-
-            if (tokenAttempts >= 3)
+            else
             {
-                cout << "\n\t\tFailed to enter a valid token number after three attempts. Blocking the car.\n";
-                blockVehicle(plateNumber, carIt->second.getToken());
+                cout << "\n\t\tInvalid input. Please enter a valid token number.\n";
+                tokenAttempts++;
             }
+        }
+
+        if (tokenAttempts >= 3)
+        {
+            cout << "\n\t\tFailed to enter a valid token number after three attempts. Blocking the car.\n";
+            blockVehicle(plateNumber, carIt->second.getToken());
         }
     }
 
