@@ -937,3 +937,840 @@ public:
         }
     }
 };
+
+class ParkAndUnPark : public ErrorHandling
+{
+
+    // Declarations
+    unordered_map<string, Car> cars;   // Stores currently parked cars with their plate number as the key
+    unordered_map<string, Bus> buses;  // Stores currently parked buses with their plate number as the key
+    unordered_map<string, Bike> bikes; // Stores currently parked bikes with their plate number as the key
+
+    unordered_map<string, Car> unparkedCars;   // Stores unparked cars
+    unordered_map<string, Bus> unparkedBuses;  // Stores unparked buses
+    unordered_map<string, Bike> unparkedBikes; // Stores unparked bikes
+
+    unordered_map<string, int> blockedVehicles; // Key: "PlateNo-Token", Value: Token number (for blocked vehicles)
+    vector<string> parkedPlateNumbers;          // Stores the plate numbers of all currently parked vehicles
+
+    PaymentRecord payment;           // Object for managing payment records
+    BillCalculate::RateConfig rates; // Configuration for billing rates
+
+    int token;          // Token number used for vehicle validation
+    string plateNumber; // Plate number of the vehicle being processed
+    bool found;         // Flag to indicate if a vehicle was found during search
+    string unParkToken; // The token number entered during the unpark process
+    int plateAttempts;
+    int tokenAttempts;
+
+    string formatTime(time_t time)
+    {
+        char buffer[80];
+        struct tm *timeinfo = localtime(&time);
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %I:%M:%S %p", timeinfo);
+        return string(buffer);
+    }
+
+    template <typename T>
+    void quickSort(vector<T> &list, int left, int right)
+    {
+        int i = left, j = right;
+        T tmp;
+        T pivot = list[(left + right) / 2];
+
+        while (i <= j)
+        {
+            while (list[i].getPlateNo() < pivot.getPlateNo())
+                i++;
+            while (list[j].getPlateNo() > pivot.getPlateNo())
+                j--;
+            if (i <= j)
+            {
+                tmp = list[i];
+                list[i] = list[j];
+                list[j] = tmp;
+                i++;
+                j--;
+            }
+        }
+
+        if (left < j)
+            quickSort(list, left, j);
+        if (i < right)
+            quickSort(list, i, right);
+    }
+
+    template <typename T>
+    void deleteRecord(unordered_map<string, T> &records, const string &plateNo)
+    {
+        auto it = records.find(plateNo);
+        if (it != records.end())
+        {
+            records.erase(it);
+            cout << "\n\t\tRecord with plate number " << plateNo << " has been deleted.\n";
+        }
+        else
+        {
+            cout << "\n\t\tRecord with plate number " << plateNo << " not found.\n";
+        }
+    }
+
+    template <typename T>
+    void deleteAllRecords(unordered_map<string, T> &records, const string &type)
+    {
+        records.clear();
+        cout << "\n\t\tAll " << type << " records have been deleted.\n";
+    }
+
+    void blockVehicle(const string &plateNo, int blockToken)
+    {
+        string key = plateNo + "-" + std::to_string(blockToken);
+        blockedVehicles[key] = blockToken;
+    }
+
+    bool isTokenBlocked(const string &plateNo, int token)
+    {
+        string key = plateNo + "-" + std::to_string(token);
+        return blockedVehicles.find(key) != blockedVehicles.end();
+    }
+
+    void removePlateNumber(const string &plateNo)
+    {
+        auto it = find(parkedPlateNumbers.begin(), parkedPlateNumbers.end(), plateNo);
+        if (it != parkedPlateNumbers.end())
+        {
+            parkedPlateNumbers.erase(it);
+        }
+    }
+
+public:
+    ParkAndUnPark() : payment()
+    {
+        // Initialize default rates
+        rates.carHourlyRate = 70;
+        rates.carDailyRate = 70;
+        rates.busHourlyRate = 100;
+        rates.busDailyRate = 100;
+        rates.bikeHourlyRate = 50;
+        rates.bikeDailyRate = 50;
+        rates.carHourlyFineRate = 50;
+        rates.carDailyFineRate = 50;
+        rates.busHourlyFineRate = 70;
+        rates.busDailyFineRate = 70;
+        rates.bikeHourlyFineRate = 30;
+        rates.bikeDailyFineRate = 30;
+    }
+
+    // Add methods to set rates
+    void setCarRates(double hourlyRate, double dailyRate, double hourlyFineRate, double dailyFineRate)
+    {
+        rates.carHourlyRate = hourlyRate;
+        rates.carDailyRate = dailyRate;
+        rates.carHourlyFineRate = hourlyFineRate;
+        rates.carDailyFineRate = dailyFineRate;
+    }
+    void setBusRates(double hourlyRate, double dailyRate, double hourlyFineRate, double dailyFineRate)
+    {
+        rates.busHourlyRate = hourlyRate;
+        rates.busDailyRate = dailyRate;
+        rates.busHourlyFineRate = hourlyFineRate;
+        rates.busDailyFineRate = dailyFineRate;
+    }
+    void setBikeRates(double hourlyRate, double dailyRate, double hourlyFineRate, double dailyFineRate)
+    {
+        rates.bikeHourlyRate = hourlyRate;
+        rates.bikeDailyRate = dailyRate;
+        rates.bikeHourlyFineRate = hourlyFineRate;
+        rates.bikeDailyFineRate = dailyFineRate;
+    }
+
+    BillCalculate::RateConfig getRates() const
+    {
+        return rates;
+    }
+
+    void unblockVehicle(const string &plateNo, int unblockToken)
+    {
+        string key = plateNo + "-" + std::to_string(unblockToken);
+        if (blockedVehicles.find(key) != blockedVehicles.end())
+        {
+            blockedVehicles.erase(key);
+            cout << "\nVehicle with plate number " << plateNo << " and token " << unblockToken << " successfully unblocked.\n";
+        }
+        else
+        {
+            cout << "\nError: Vehicle with plate number " << plateNo << " and token " << unblockToken << " not found in the blocked list.\n";
+        }
+    }
+
+    void parkCar()
+    {
+        Car car;
+        car.carPark(cars, rates);
+        cars[car.getPlateNo()] = car;
+        time_t parkTime;
+        time(&parkTime);
+        payment.recordPayment(car.getPlateNo(), "Car", car.getToken(), car.getAmount(), parkTime, 0, false, car.getCellNo());
+    }
+
+    void parkBus()
+    {
+        Bus bus;
+        bus.busPark(buses, rates);
+        buses[bus.getPlateNo()] = bus;
+        time_t parkTime;
+        time(&parkTime);
+        payment.recordPayment(bus.getPlateNo(), "Bus", bus.getToken(), bus.getAmount(), parkTime, 0, false, bus.getCellNo());
+    }
+
+    void parkBike()
+    {
+        Bike bike;
+        bike.bikePark(bikes, rates);
+        bikes[bike.getPlateNo()] = bike;
+        time_t parkTime;
+        time(&parkTime);
+        payment.recordPayment(bike.getPlateNo(), "Bike", bike.getToken(), bike.getAmount(), parkTime, 0, false, bike.getCellNo());
+    }
+
+    // Unpark logic with blocking after failed attempts
+    void unparkCar()
+    {
+        plateAttempts = 0;
+        tokenAttempts = 0;
+        found = false;
+        auto carIt = cars.end(); // Declare carIt at the beginning
+
+        if (cars.empty())
+        {
+            cout << "\n\t\tNo cars currently parked!\n";
+            return;
+        }
+
+        while (plateAttempts < 3)
+        {
+            cout << "\n\t\tEnter the plate number of the car to unpark: ";
+            getline(cin, plateNumber);
+            for (int i = 0; i < plateNumber.size(); i++)
+            {
+                plateNumber[i] = toupper(plateNumber[i]);
+            }
+
+            if (plateNoValidation(plateNumber))
+            {
+                carIt = cars.find(plateNumber);
+                if (carIt != cars.end())
+                {
+                    found = true;
+                    break;
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid plate number. Please try again.\n";
+                    plateAttempts++;
+                }
+            }
+            else
+            {
+                cout << "\n\t\tInvalid input. Please enter a valid plate number.\n";
+                plateAttempts++;
+            }
+        }
+
+        if (!found)
+        {
+            cout << "\n\t\tFailed to enter a valid plate number after three attempts.\n";
+            return;
+        }
+
+        if (found)
+        {
+            while (tokenAttempts < 3)
+            {
+                cout << "\n\t\tEnter the token number of the car to unpark: ";
+                getline(cin, unParkToken);
+                if (tokenValid(unParkToken))
+                {
+                    token = stoi(unParkToken);
+
+                    if (!isTokenBlocked(plateNumber, token))
+                    {
+                        if (carIt != cars.end() && carIt->second.getToken() == token)
+                        {
+                            // Calculate overstay time using the Car instance
+                            double overstayTime = carIt->second.calculateOverstayTime(carIt->second.getParkTime(), carIt->second.getHours(), carIt->second.getDays());
+
+                            // Apply fines if there is overstay
+                            if (overstayTime > 0)
+                            {
+                                if (carIt->second.getParkingType() == "2")
+                                {
+                                    carIt->second.setFine(overstayTime * rates.carDailyFineRate);
+                                }
+                                else if (carIt->second.getParkingType() == "1")
+                                {
+                                    carIt->second.setFine(overstayTime * rates.carHourlyFineRate);
+                                }
+                                carIt->second.updateTotalAmount();
+                            }
+
+                            carIt->second.displayBill(false);
+                            carIt->second.AskForPayment();
+                            time_t unparkTime;
+                            time(&unparkTime);
+                            carIt->second.setUnparkTime(unparkTime);
+                            payment.updatePaymentRecord(carIt->second.getPlateNo(), "Car", token, carIt->second.getAmount(), carIt->second.getUnparkTime());
+
+                            unparkedCars[plateNumber] = carIt->second;
+                            cars.erase(carIt);
+                            removePlateNumber(plateNumber);
+                            cout << "\n\t\tCar unparked successfully!\n";
+                            return;
+                        }
+                        else
+                        {
+                            cout << "\n\t\tInvalid token number. Please try again.\n";
+                            tokenAttempts++;
+                        }
+                    }
+                    else
+                    {
+                        cout << "\n\t\tToken is currently blocked. Please contact admin to unblock.\n";
+                        return;
+                    }
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid input. Please enter a valid token number.\n";
+                    tokenAttempts++;
+                }
+            }
+
+            if (tokenAttempts >= 3)
+            {
+                cout << "\n\t\tFailed to enter a valid token number after three attempts. Blocking the car.\n";
+                blockVehicle(plateNumber, carIt->second.getToken());
+            }
+        }
+    }
+
+    void unparkBus()
+    {
+        plateAttempts = 0;
+        tokenAttempts = 0;
+        found = false;
+        auto busIt = buses.end();
+        if (buses.empty())
+        {
+            cout << "\n\t\tNo buses currently parked!\n";
+            return;
+        }
+
+        while (plateAttempts < 3)
+        {
+            cout << "\n\t\tEnter the plate number of the bus to unpark: ";
+            getline(cin, plateNumber);
+            for (int i = 0; i < plateNumber.size(); i++)
+            {
+                plateNumber[i] = toupper(plateNumber[i]);
+            }
+            if (plateNoValidation(plateNumber))
+            {
+                busIt = buses.find(plateNumber);
+                if (busIt != buses.end())
+                {
+                    found = true;
+                    break;
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid plate number. Please try again.\n";
+                    plateAttempts++;
+                }
+            }
+            else
+            {
+                cout << "\n\t\tInvalid input. Please enter a valid plate number.\n";
+                plateAttempts++;
+            }
+        }
+
+        if (!found)
+        {
+            cout << "\n\t\tFailed to enter a valid plate number after three attempts.\n";
+            return;
+        }
+
+        // If found the correct plate number, now ask for the token number
+        if (found)
+        {
+            while (tokenAttempts < 3)
+            {
+                cout << "\n\t\tEnter the token number of the bus to unpark: ";
+                getline(cin, unParkToken);
+                if (tokenValid(unParkToken))
+                {
+                    token = stoi(unParkToken);
+
+                    if (!isTokenBlocked(plateNumber, token))
+                    {
+                        if (busIt != buses.end() && busIt->second.getToken() == token)
+                        {
+                            // Calculate overstay time using the Car instance
+                            double overstayTime = busIt->second.calculateOverstayTime(busIt->second.getParkTime(), busIt->second.getHours(), busIt->second.getDays());
+
+                            // Apply fines if there is overstay
+                            if (overstayTime > 0)
+                            {
+                                if (busIt->second.getParkingType() == "2")
+                                {
+                                    busIt->second.setFine(overstayTime * rates.carDailyFineRate);
+                                }
+                                else if (busIt->second.getParkingType() == "1")
+                                {
+                                    busIt->second.setFine(overstayTime * rates.carHourlyFineRate);
+                                }
+                                busIt->second.updateTotalAmount();
+                            }
+
+                            busIt->second.displayBill(false);
+                            busIt->second.AskForPayment();
+                            time_t unparkTime;
+                            time(&unparkTime);
+                            busIt->second.setUnparkTime(unparkTime);
+                            payment.updatePaymentRecord(busIt->second.getPlateNo(), "Bus", token, busIt->second.getAmount(), busIt->second.getUnparkTime());
+
+                            unparkedBuses[plateNumber] = busIt->second;
+                            buses.erase(busIt);
+                            removePlateNumber(plateNumber);
+                            cout << "\n\t\tBus unparked successfully!\n";
+                            return;
+                        }
+                        else
+                        {
+                            cout << "\n\t\tInvalid token number. Please try again.\n";
+                            tokenAttempts++;
+                        }
+                    }
+                    else
+                    {
+                        cout << "\n\t\tToken is currently blocked. Please contact admin to unblock.\n";
+                        return;
+                    }
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid input. Please enter a valid token number.\n";
+                    tokenAttempts++;
+                }
+            }
+
+            if (tokenAttempts >= 3)
+            {
+                cout << "\n\t\tFailed to enter a valid token number after three attempts. Blocking the car.\n";
+                blockVehicle(plateNumber, busIt->second.getToken());
+            }
+        }
+    }
+
+    void unparkBike()
+    {
+        plateAttempts = 0;
+        tokenAttempts = 0;
+        found = false;
+        auto bikeIt = bikes.end();
+        if (bikes.empty())
+        {
+            cout << "\n\t\tNo bikes currently parked!\n";
+            return;
+        }
+
+        while (plateAttempts < 3)
+        {
+            cout << "\n\t\tEnter the plate number of the bike to unpark: ";
+            getline(cin, plateNumber);
+            for (int i = 0; i < plateNumber.size(); i++)
+            {
+                plateNumber[i] = toupper(plateNumber[i]);
+            }
+            if (plateNoValidation(plateNumber))
+            {
+                bikeIt = bikes.find(plateNumber);
+                if (bikeIt != bikes.end())
+                {
+                    found = true;
+                    break;
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid plate number. Please try again.\n";
+                    plateAttempts++;
+                }
+            }
+            else
+            {
+                cout << "\n\t\tInvalid input. Please enter a valid plate number.\n";
+                plateAttempts++;
+            }
+        }
+
+        if (!found)
+        {
+            cout << "\n\t\tFailed to enter a valid plate number after three attempts.\n";
+            return;
+        }
+
+        // If found the correct plate number, now ask for the token number
+        if (found)
+        {
+            while (tokenAttempts < 3)
+            {
+                cout << "\n\t\tEnter the token number of the bus to unpark: ";
+                getline(cin, unParkToken);
+                if (tokenValid(unParkToken))
+                {
+                    token = stoi(unParkToken);
+
+                    if (!isTokenBlocked(plateNumber, token))
+                    {
+                        if (bikeIt != bikes.end() && bikeIt->second.getToken() == token)
+                        {
+                            // Calculate overstay time using the Car instance
+                            double overstayTime = bikeIt->second.calculateOverstayTime(bikeIt->second.getParkTime(), bikeIt->second.getHours(), bikeIt->second.getDays());
+
+                            // Apply fines if there is overstay
+                            if (overstayTime > 0)
+                            {
+                                if (bikeIt->second.getParkingType() == "2")
+                                {
+                                    bikeIt->second.setFine(overstayTime * rates.carDailyFineRate);
+                                }
+                                else if (bikeIt->second.getParkingType() == "1")
+                                {
+                                    bikeIt->second.setFine(overstayTime * rates.carHourlyFineRate);
+                                }
+                                bikeIt->second.updateTotalAmount();
+                            }
+
+                            bikeIt->second.displayBill(false);
+                            bikeIt->second.AskForPayment();
+                            time_t unparkTime;
+                            time(&unparkTime);
+                            bikeIt->second.setUnparkTime(unparkTime);
+                            payment.updatePaymentRecord(bikeIt->second.getPlateNo(), "Bike", token, bikeIt->second.getAmount(), bikeIt->second.getUnparkTime());
+
+                            unparkedBikes[plateNumber] = bikeIt->second;
+                            bikes.erase(bikeIt);
+                            removePlateNumber(plateNumber);
+                            cout << "\n\t\tBike unparked successfully!\n";
+                            return;
+                        }
+                        else
+                        {
+                            cout << "\n\t\tInvalid token number. Please try again.\n";
+                            tokenAttempts++;
+                        }
+                    }
+                    else
+                    {
+                        cout << "\n\t\tToken is currently blocked. Please contact admin to unblock.\n";
+                        return;
+                    }
+                }
+                else
+                {
+                    cout << "\n\t\tInvalid input. Please enter a valid token number.\n";
+                    tokenAttempts++;
+                }
+            }
+
+            if (tokenAttempts >= 3)
+            {
+                cout << "\n\t\tFailed to enter a valid token number after three attempts. Blocking the car.\n";
+                blockVehicle(plateNumber, bikeIt->second.getToken());
+            }
+        }
+    }
+
+    void displayParkedCars()
+    {
+        if (cars.empty())
+        {
+            cout << "\n\t\tNo Cars Parked found!\n";
+        }
+        else
+        {
+            vector<Car> carList;
+            for (const auto &entry : cars)
+            {
+                carList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(carList, 0, carList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Parked Cars ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Park Date & Time" << setw(19) << "Status" << "\n\n";
+            for (int i = 0; i < carList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << carList[i].getCellNo() << setw(20) << carList[i].getPlateNo() << setw(20) << carList[i].getToken();
+                cout << setw(11) << (carList[i].getParkingType() == "2" ? carList[i].getDays() : carList[i].getHours())
+                     << (carList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(carList[i].getParkTime()) << setw(20) << (isTokenBlocked(carList[i].getPlateNo(), carList[i].getToken()) ? "Blocked " : "Available") << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            carList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void displayParkedBuses()
+    {
+        if (buses.empty())
+        {
+            cout << "\n\t\tNo Buses Parked found!\n";
+        }
+        else
+        {
+            vector<Bus> busList;
+            for (const auto &entry : buses)
+            {
+                busList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(busList, 0, busList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Parked Buses ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Park Date & Time" << setw(19) << "Status" << "\n\n";
+            for (int i = 0; i < busList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << busList[i].getCellNo() << setw(20) << busList[i].getPlateNo() << setw(20) << busList[i].getToken();
+                cout << setw(11) << (busList[i].getParkingType() == "2" ? busList[i].getDays() : busList[i].getHours())
+                     << (busList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(busList[i].getParkTime()) << setw(20) << (isTokenBlocked(busList[i].getPlateNo(), busList[i].getToken()) ? "Blocked " : "Available") << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            busList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void displayParkedBikes()
+    {
+        if (bikes.empty())
+        {
+            cout << "\n\t\tNo Bikes Parked found!\n";
+        }
+        else
+        {
+            vector<Bike> bikeList;
+            for (const auto &entry : bikes)
+            {
+                bikeList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(bikeList, 0, bikeList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Parked Bikes ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Park Date & Time" << setw(19) << "Status" << "\n\n";
+            for (int i = 0; i < bikeList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << bikeList[i].getCellNo() << setw(20) << bikeList[i].getPlateNo() << setw(20) << bikeList[i].getToken();
+                cout << setw(11) << (bikeList[i].getParkingType() == "2" ? bikeList[i].getDays() : bikeList[i].getHours())
+                     << (bikeList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(bikeList[i].getParkTime()) << setw(20) << (isTokenBlocked(bikeList[i].getPlateNo(), bikeList[i].getToken()) ? "Blocked " : "Available") << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            bikeList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void displayUnparkedCars()
+    {
+        if (unparkedCars.empty())
+        {
+            cout << "\n\t\tNo Unparked Cars found!\n";
+        }
+        else
+        {
+            vector<Car> carList;
+            for (const auto &entry : unparkedCars)
+            {
+                carList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(carList, 0, carList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Unparked Cars ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Unpark Date & Time" << "\n\n";
+            for (int i = 0; i < carList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << carList[i].getCellNo() << setw(20) << carList[i].getPlateNo() << setw(20) << carList[i].getToken();
+                cout << setw(11) << (carList[i].getParkingType() == "2" ? carList[i].getDays() : carList[i].getHours())
+                     << (carList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(carList[i].getUnparkTime()) << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            carList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void displayUnparkedBuses()
+    {
+        if (unparkedBuses.empty())
+        {
+            cout << "\n\t\tNo Unparked Buses found!\n";
+        }
+        else
+        {
+            vector<Bus> busList;
+            for (const auto &entry : unparkedBuses)
+            {
+                busList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(busList, 0, busList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Unparked Buses ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Unpark Date & Time" << "\n\n";
+            for (int i = 0; i < busList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << busList[i].getCellNo() << setw(20) << busList[i].getPlateNo() << setw(20) << busList[i].getToken();
+                cout << setw(11) << (busList[i].getParkingType() == "2" ? busList[i].getDays() : busList[i].getHours())
+                     << (busList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(busList[i].getUnparkTime()) << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            busList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void displayUnparkedBikes()
+    {
+        if (unparkedBikes.empty())
+        {
+            cout << "\n\t\tNo Unparked Bikes found!\n";
+        }
+        else
+        {
+            vector<Bike> bikeList;
+            for (const auto &entry : unparkedBikes)
+            {
+                bikeList.push_back(entry.second);
+            }
+
+            // Sort the list using quick sort
+            quickSort(bikeList, 0, bikeList.size() - 1);
+
+            cout << "\n\t\t\t--------------------- Unparked Bikes ----------------------\n\n";
+            cout << setw(10) << "Serial No" << setw(17) << "Cell No" << setw(22) << "Plate No" << setw(21) << "Token No" << setw(20) << "Parking Type" << setw(23) << "Unpark Date & Time" << "\n\n";
+            for (int i = 0; i < bikeList.size(); i++)
+            {
+                cout << setw(4) << i + 1 << setw(25) << bikeList[i].getCellNo() << setw(20) << bikeList[i].getPlateNo() << setw(20) << bikeList[i].getToken();
+                cout << setw(11) << (bikeList[i].getParkingType() == "2" ? bikeList[i].getDays() : bikeList[i].getHours())
+                     << (bikeList[i].getParkingType() == "2" ? " day(s)" : " hour(s)")
+                     << setw(28) << formatTime(bikeList[i].getUnparkTime()) << "\n";
+            }
+            cout << "\n-------------------------------------------------------------------------------------------------------------\n\n\n";
+            bikeList.clear(); // Clear the vector after displaying
+        }
+    }
+
+    void Payments()
+    {
+        payment.displayPayments();
+    }
+
+    void deletePayRecords()
+    {
+        payment.deleteAllRecords();
+    }
+
+    void withDraw(const string &adminPassword)
+    {
+        payment.withdrawPayment(adminPassword);
+    }
+
+    void deleteSpecificPaymentRecord(const string &plateNo, const string &vehicleType)
+    {
+        payment.deleteSpecificRecord(plateNo, vehicleType);
+    }
+
+    void deleteParkedCar(const string &plateNo)
+    {
+        deleteRecord(cars, plateNo);
+    }
+
+    void deleteParkedBus(const string &plateNo)
+    {
+        deleteRecord(buses, plateNo);
+    }
+
+    void deleteParkedBike(const string &plateNo)
+    {
+        deleteRecord(bikes, plateNo);
+    }
+
+    void deleteUnparkedCar(const string &plateNo)
+    {
+        deleteRecord(unparkedCars, plateNo);
+    }
+
+    void deleteUnparkedBus(const string &plateNo)
+    {
+        deleteRecord(unparkedBuses, plateNo);
+    }
+
+    void deleteUnparkedBike(const string &plateNo)
+    {
+        deleteRecord(unparkedBikes, plateNo);
+    }
+
+    void deleteAllParkedCars()
+    {
+        deleteAllRecords(cars, "parked cars");
+    }
+
+    void deleteAllParkedBuses()
+    {
+        deleteAllRecords(buses, "parked buses");
+    }
+
+    void deleteAllParkedBikes()
+    {
+        deleteAllRecords(bikes, "parked bikes");
+    }
+
+    void deleteAllUnparkedCars()
+    {
+        deleteAllRecords(unparkedCars, "unparked cars");
+    }
+
+    void deleteAllUnparkedBuses()
+    {
+        deleteAllRecords(unparkedBuses, "unparked buses");
+    }
+
+    void deleteAllUnparkedBikes()
+    {
+        deleteAllRecords(unparkedBikes, "unparked bikes");
+    }
+
+    void deleteParkedRecords()
+    {
+        deleteAllParkedCars();
+        deleteAllParkedBuses();
+        deleteAllParkedBikes();
+        cout << "\n\t\tAll parked vehicle records have been deleted.\n";
+    }
+
+    void deleteUnParkedRecords()
+    {
+        deleteAllUnparkedCars();
+        deleteAllUnparkedBuses();
+        deleteAllUnparkedBikes();
+        cout << "\n\t\tAll unparked vehicle records have been deleted.\n";
+    }
+};
