@@ -7,8 +7,6 @@
 #include <vector>
 #include <algorithm>
 #include <conio.h>
-#include <fstream>
-#include <sstream>
 
 using namespace std;
 
@@ -79,6 +77,14 @@ public:
             if (isalpha(plateNo[0]) &&
                 isdigit(plateNo[1]) && isdigit(plateNo[2]) && isdigit(plateNo[3]) && isdigit(plateNo[4]) &&
                 isalpha(plateNo[5]))
+            {
+                return true;
+            }
+        }
+        else if(plateNo.length() == 7)
+        {
+            if(isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
+            isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[3]) && isdigit(plateNo[4]))
             {
                 return true;
             }
@@ -315,6 +321,18 @@ public:
         pass[i] = '\0';
         password = pass;
     }
+
+    bool passwordValidation(const string &str)
+    {
+        bool isLengthValid = str.length() >= 6;
+
+        if (!isLengthValid)
+        {
+            cout << "\n\n\tPassword must be at least 6 characters long.\n\n";
+        }
+
+        return isLengthValid;
+    }
 };
 
 class Vehicle : public ErrorHandling
@@ -370,6 +388,7 @@ public:
                 while (true)
                 {
                     string hourStr;
+                    cout<<"\n\tEnter hours b/w ( 1 - 24 ) \n"<<endl;
                     cout << "\n\t\tEnter the no of hours to park the Vehicle: ";
                     getline(cin, hourStr);
                     if (hoursValidation(hourStr))
@@ -386,6 +405,8 @@ public:
                 while (true)
                 {
                     string dayStr;
+
+                    cout<<"\n\tEnter days b/w ( 1 - 31 ) \n"<<endl;
                     cout << "\n\t\tEnter the no of days to park the Vehicle: ";
                     getline(cin, dayStr);
                     if (daysValidation(dayStr))
@@ -405,6 +426,7 @@ public:
         }
         while (true)
         {
+            cout<<"\n\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"<<endl;
             cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
             getline(cin, cellNo);
             if (phoneValidation(cellNo))
@@ -415,6 +437,7 @@ public:
         }
         while (true)
         {
+            cout<<"\n\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"<<endl;
             cout << "\n\t\tEnter the plate no of the Vehicle: ";
             getline(cin, plateNo);
             for (int i = 0; i < plateNo.size(); i++)
@@ -449,6 +472,7 @@ public:
     time_t getParkTime() const { return parkTime; }
     time_t getUnparkTime() const { return unparkTime; }
 };
+
 class BillCalculate : public Vehicle
 {
 public:
@@ -575,6 +599,7 @@ public:
             else if (parkingType == "1")
                 cout << "Allocated Hours   : " << hours << " Hours" << "\n";
             cout << "Token Number      : " << token << "\n";
+            // cout << "Amount            : Rs." << totalAmount << "\n"; // Show amount when parked
         }
         else
         {
@@ -753,6 +778,7 @@ public:
         displayBill(true);
     }
 };
+
 class PaymentRecord : public ErrorHandling
 {
 private:
@@ -764,11 +790,14 @@ private:
         time_t parkTime;
         time_t unparkTime;
         string vehicleType;
-        string cellNumber; // New field for cell number
+        string cellNumber;
     };
 
     unordered_map<string, PaymentInfo> payments;
+    unordered_map<string, PaymentInfo> backupPayments; // Backup for deleted records
     double totalAmount;
+    int parkedCount;
+    int unparkedCount;
     double withDrawAmount;
 
     string timeTostring(time_t time) const
@@ -779,29 +808,66 @@ private:
         return string(buffer);
     }
 
-    
-
 public:
-    PaymentRecord() : totalAmount(0.0) {}
+    PaymentRecord() : totalAmount(0.0), parkedCount(0), unparkedCount(0) {}
 
     void recordPayment(const string &plateNo, const string &vehicleType, int token, double amount, time_t parkTime, time_t unparkTime, bool isPaid, const string &cellNumber)
     {
         string key = vehicleType + "-" + plateNo;
         payments[key] = {token, amount, isPaid, parkTime, unparkTime, vehicleType, cellNumber};
+
         if (isPaid)
         {
             totalAmount += amount;
+            unparkedCount++; // If payment is made, the vehicle is considered unparked
+        }
+        else
+        {
+            parkedCount++; // If payment is not made, the vehicle is considered parked
         }
     }
 
     void updatePaymentRecord(const string &plateNo, const string &vehicleType, int token, double amount, time_t unparkTime)
     {
         string key = vehicleType + "-" + plateNo;
-        if (payments.find(key) != payments.end() && payments[key].token == token)
+        auto it = payments.find(key);
+        if (it != payments.end() && it->second.token == token)
         {
-            payments[key].paid = true;
-            payments[key].unparkTime = unparkTime;
+            if (!it->second.paid) // If previously unpaid
+            {
+                parkedCount--;   // Decrement parked count
+                unparkedCount++; // Increment unparked count
+            }
+
+            it->second.paid = true;
+            it->second.unparkTime = unparkTime;
             totalAmount += amount;
+        }
+        else
+        {
+            auto backupIt = backupPayments.find(key);
+            if (backupIt != backupPayments.end() && backupIt->second.token == token)
+            {
+                // Restore from backup
+                payments[key] = backupIt->second;
+                backupPayments.erase(backupIt);
+
+                if (!payments[key].paid) // If previously unpaid
+                {
+                    parkedCount--;   // Decrement parked count
+                    unparkedCount++; // Increment unparked count
+                }
+
+                payments[key].paid = true;
+                payments[key].unparkTime = unparkTime;
+                totalAmount += amount;
+
+                cout << "Record restored from backup and updated successfully." << endl;
+            }
+            else
+            {
+                cout << "No payment record found for plate number " << plateNo << " and vehicle type " << vehicleType << " with token " << token << "." << endl;
+            }
         }
     }
 
@@ -839,7 +905,7 @@ public:
         }
 
         cout << "\n***********************************************************************************************************************************************\n";
-        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\n";
+        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\t"<< "Parked Vehicles: " << parkedCount << "\t"<<"Unparked Vehicles: " << unparkedCount<< "\n";
     }
 
     void deleteAllRecords()
@@ -850,8 +916,13 @@ public:
             return;
         }
 
+        // Backup records before deletion
+        backupPayments = payments;
         payments.clear();
         totalAmount = 0.0;
+        parkedCount = 0;
+        unparkedCount = 0;
+        // cout << "All payment records have been deleted and backed up." << endl;
         cout << "All payment records have been deleted." << endl;
     }
 
@@ -861,9 +932,21 @@ public:
         auto it = payments.find(key);
         if (it != payments.end())
         {
+            // Backup the record before deletion
+            backupPayments[key] = it->second;
+
+            if (!it->second.paid)
+            {
+                parkedCount--;
+            }
+            else
+            {
+                unparkedCount--;
+            }
+
             totalAmount -= it->second.amount;
             payments.erase(it);
-            cout << "Payment record for plate number " << plateNo << " has been deleted." << endl;
+            // cout << "Payment record for plate number " << plateNo << " has been deleted and backed up." << endl;
         }
         else
         {
@@ -917,7 +1000,7 @@ public:
                         {
                             totalAmount -= withDrawAmount;
                             cout << "Rs " << withDrawAmount << " has been successfully withdrawn. Remaining balance: Rs " << totalAmount << endl;
-                            return;       // Exit the function after successful withdrawal
+                            return; // Exit the function after successful withdrawal
                         }
                     }
                 }
@@ -1136,10 +1219,10 @@ public:
     // Unpark logic with blocking after failed attempts
     void unparkCar()
     {
-        plateAttempts = 0;
-        tokenAttempts = 0;
-        unParkToken;
-        found = false;
+        int plateAttempts = 0;
+        int tokenAttempts = 0;
+        string unParkToken;
+        bool found = false;
         auto carIt = cars.end();
 
         if (cars.empty())
@@ -1777,3 +1860,1019 @@ public:
         cout << "\n\t\tAll unparked vehicle records have been deleted.\n";
     }
 };
+
+void changeAdminPassword(string &adminPassword, ParkAndUnPark &parking)
+{
+    system("CLS");
+    string oldPassword;
+    string newPassword;
+
+    parking.passLogic(oldPassword, "Enter old password: ");
+
+    if (oldPassword == adminPassword)
+    {
+        while (true)
+        {
+            cout << "\n";
+            parking.passLogic(newPassword, "Enter new password: ");
+
+            if (parking.nameValid(newPassword))
+            {
+                adminPassword = newPassword;
+                cout << "\n\t\tPassword changed successfully!\n";
+                break;
+            }
+            cout << "\n\t\tInvalid new password\n";
+        }
+    }
+    else
+    {
+        cout << "\n\t\tIncorrect old password. Password change failed!\n";
+    }
+}
+
+void userInterface(ParkAndUnPark &parking)
+{
+    while (true)
+    {
+        cout << "\n\t\t ______________________________________________\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t| [1]   |     Park Vehicle" << setw(23) << "|\n";
+        cout << "\t\t| [2]   |     Unpark Vehicle" << setw(21) << "|\n";
+        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|_______|______________________________________|\n";
+        string user;
+        while (true)
+        {
+            cout << "\n\t\tEnter your choice: ";
+            getline(cin, user);
+            if (parking.menuChoice(user))
+            {
+                break;
+            }
+            cout << "\n\t\tInvalid input.\n";
+        }
+
+        if (user == "1")
+        {
+            system("CLS");
+            while (true)
+            {
+                cout << "\n\t\t ______________________________________________\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t| [1]   |     Car" << setw(32) << "|\n";
+                cout << "\t\t| [2]   |     Bus" << setw(32) << "|\n";
+                cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
+                cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|_______|______________________________________|\n";
+                string park;
+                while (true)
+                {
+                    cout << "\n\t\tEnter your choice: ";
+                    getline(cin, park);
+                    if (parking.menuChoice(park))
+                    {
+                        break;
+                    }
+                    cout << "\n\t\tInvalid input.\n";
+                }
+
+                if (park == "1")
+                {
+                    system("CLS");
+                    parking.parkCar();
+                }
+                else if (park == "2")
+                {
+                    system("CLS");
+                    parking.parkBus();
+                }
+                else if (park == "3")
+                {
+                    system("CLS");
+                    parking.parkBike();
+                }
+                else if (park == "0")
+                {
+                    system("CLS");
+                    break; // Return to the previous menu
+                }
+                else
+                {
+                    system("CLS");
+                    cout << "\n\t\tInvalid choice\n";
+                }
+            }
+        }
+        else if (user == "2")
+        {
+            system("CLS");
+            while (true)
+            {
+                cout << "\n\t\t ______________________________________________\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t| [1]   |     Car" << setw(32) << "|\n";
+                cout << "\t\t| [2]   |     Bus" << setw(32) << "|\n";
+                cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
+                cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|_______|______________________________________|\n";
+                string unpark;
+                while (true)
+                {
+                    cout << "\n\t\tEnter your choice: ";
+                    getline(cin, unpark);
+                    if (parking.menuChoice(unpark))
+                    {
+                        break;
+                    }
+                    cout << "\n\t\tInvalid input.\n";
+                }
+
+                if (unpark == "1")
+                {
+                    system("CLS");
+                    parking.unparkCar();
+                }
+                else if (unpark == "2")
+                {
+                    system("CLS");
+                    parking.unparkBus();
+                }
+                else if (unpark == "3")
+                {
+                    system("CLS");
+                    parking.unparkBike();
+                }
+                else if (unpark == "0")
+                {
+                    system("CLS");
+                    break; // Return to the previous menu
+                }
+                else
+                {
+                    system("CLS");
+                    cout << "\n\t\tInvalid choice\n";
+                }
+            }
+        }
+        else if (user == "0")
+        {
+            system("CLS");
+            break;
+        }
+        else
+        {
+            system("CLS");
+            cout << "\n\t\tInvalid choice!\n";
+        }
+    }
+}
+
+void setRates(ParkAndUnPark &parking)
+{
+    string choice;
+    while (true)
+    {
+        cout << "\n\t\t ______________________________________________\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t| [1]   |     Set Car Rates" << setw(22) << "|\n";
+        cout << "\t\t| [2]   |     Set Bus Rates" << setw(22) << "|\n";
+        cout << "\t\t| [3]   |     Set Bike Rates" << setw(21) << "|\n";
+        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|_______|______________________________________|\n";
+
+        while (true)
+        {
+            cout << "\n\t\tEnter your choice: ";
+            getline(cin, choice);
+            if (parking.menuChoice(choice))
+            {
+                break;
+            }
+            cout << "\n\t\tInvalid input.\n";
+        }
+
+        if (choice == "1")
+        {
+            string carHourlyRate, carDailyRate, carHourlyFineRate, carDailyFineRate;
+
+            do
+            {
+                cout << "\n\t\tEnter Car Hourly Rate: ";
+                getline(cin, carHourlyRate);
+                if (parking.ratesValid(carHourlyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Car Daily Rate: ";
+                getline(cin, carDailyRate);
+                if (parking.ratesValid(carDailyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Car Hourly Fine Rate: ";
+                getline(cin, carHourlyFineRate);
+                if (parking.ratesValid(carHourlyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Car Daily Fine Rate: ";
+                getline(cin, carDailyFineRate);
+                if (parking.ratesValid(carDailyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            parking.setCarRates(stod(carHourlyRate), stod(carDailyRate), stod(carHourlyFineRate), stod(carDailyFineRate));
+        }
+        else if (choice == "2")
+        {
+            string busHourlyRate, busDailyRate, busHourlyFineRate, busDailyFineRate;
+
+            do
+            {
+                cout << "\n\t\tEnter Bus Hourly Rate: ";
+                getline(cin, busHourlyRate);
+                if (parking.ratesValid(busHourlyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bus Daily Rate: ";
+                getline(cin, busDailyRate);
+                if (parking.ratesValid(busDailyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bus Hourly Fine Rate: ";
+                getline(cin, busHourlyFineRate);
+                if (parking.ratesValid(busHourlyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bus Daily Fine Rate: ";
+                getline(cin, busDailyFineRate);
+                if (parking.ratesValid(busDailyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            parking.setBusRates(stod(busHourlyRate), stod(busDailyRate), stod(busHourlyFineRate), stod(busDailyFineRate));
+        }
+        else if (choice == "3")
+        {
+            string bikeHourlyRate, bikeDailyRate, bikeHourlyFineRate, bikeDailyFineRate;
+
+            do
+            {
+                cout << "\n\t\tEnter Bike Hourly Rate: ";
+                getline(cin, bikeHourlyRate);
+                if (parking.ratesValid(bikeHourlyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bike Daily Rate: ";
+                getline(cin, bikeDailyRate);
+                if (parking.ratesValid(bikeDailyRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bike Hourly Fine Rate: ";
+                getline(cin, bikeHourlyFineRate);
+                if (parking.ratesValid(bikeHourlyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            do
+            {
+                cout << "\n\t\tEnter Bike Daily Fine Rate: ";
+                getline(cin, bikeDailyFineRate);
+                if (parking.ratesValid(bikeDailyFineRate))
+                {
+                    break;
+                }
+                cout << "\n\t\tInvalid input. Please enter a valid rate without decimals or invalid characters.\n";
+            } while (true);
+
+            parking.setBikeRates(stod(bikeHourlyRate), stod(bikeDailyRate), stod(bikeHourlyFineRate), stod(bikeDailyFineRate));
+        }
+        else if (choice == "0")
+        {
+            system("CLS");
+            break;
+        }
+        else
+        {
+            system("CLS");
+            cout << "\n\t\tInvalid choice!\n";
+        }
+    }
+}
+
+void adminInterface(ParkAndUnPark &parking, string &adminPassword)
+{
+    // Main admin menu
+    static bool firstAccess = true; // To check if it's the first access
+    int adminAttempt = 0;
+    string newPassword;
+    while (true)
+    {
+        string passcode;
+        if (firstAccess)
+        {
+            firstAccess = false;
+            while (true)
+            {
+                cout << "\n";
+                parking.passLogic(newPassword, "Please set a new admin password: ");
+                if (parking.passwordValidation(newPassword))
+                {
+                    adminPassword = newPassword;
+                    cout << "\nPassword set successfully! Please login with the new password.\n";
+                    break;
+                }
+                continue; // Prompt for password again with new password
+            }
+        }
+        parking.passLogic(passcode, "Enter the passcode to access the administration: ");
+        if (passcode == adminPassword)
+        {
+            system("CLS");
+            cout << "\n\t\tAccess granted! Welcome Admin.\n";
+            string tokenStr;
+            int token;
+            string admin;
+            while (true)
+            {
+                cout << "\n\t\t ______________________________________________\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t| [1]   |     Show Vehicle Data" << setw(18) << "|\n";
+                cout << "\t\t| [2]   |     Delete Vehicle Data" << setw(16) << "|\n";
+                cout << "\t\t| [3]   |     Restricted Data" << setw(20) << "|\n";
+                cout << "\t\t| [4]   |     Set Parking Rates" << setw(18) << "|\n";
+                cout << "\t\t| [5]   |     Payment Record" << setw(21) << "|\n";
+                cout << "\t\t| [6]   |     Change Password" << setw(20) << "|\n";
+                cout << "\t\t| [7]   |     Reset Password" << setw(21) << "|\n";
+                cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                cout << "\t\t|       |" << setw(40) << "|\n";
+                cout << "\t\t|_______|______________________________________|\n";
+                while (true)
+                {
+                    cout << "\n\t\tEnter your choice: ";
+                    getline(cin, admin);
+                    if (parking.menuChoice(admin))
+                    {
+                        break;
+                    }
+                    cout << "\n\t\tInvalid input.\n";
+                }
+                if (admin == "1")
+                {
+                    string data;
+                    while (true)
+                    {
+                        cout << "\n\t\t ______________________________________________\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t| [1]   |     Park Data" << setw(26) << "|\n";
+                        cout << "\t\t| [2]   |     Unpark Data" << setw(24) << "|\n";
+                        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
+                        while (true)
+                        {
+                            cout << "\n\t\tEnter your choice: ";
+                            getline(cin, data);
+                            if (parking.menuChoice(data))
+                            {
+                                break;
+                            }
+                            cout << "\n\t\tInvalid input.\n";
+                        }
+                        if (data == "1")
+                        {
+                            system("CLS");
+                            cout << "\n\t\t ______________________________________________\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t| [1]   |     Car" << setw(32) << "|\n";
+                            cout << "\t\t| [2]   |     Bus" << setw(32) << "|\n";
+                            cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
+                            cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t|_______|______________________________________|\n";
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter your choice: ";
+                                getline(cin, data);
+                                if (parking.menuChoice(data))
+                                {
+                                    break;
+                                }
+                                cout << "\n\t\tInvalid input.\n";
+                            }
+                            if (data == "1")
+                            {
+                                parking.displayParkedCars();
+                            }
+                            else if (data == "2")
+                            {
+                                parking.displayParkedBuses();
+                            }
+                            else if (data == "3")
+                            {
+                                parking.displayParkedBikes();
+                            }
+                            else if (data == "0")
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                system("CLS");
+                                cout << "\n\t\tInvalid choice.\n";
+                            }
+                        }
+                        else if (data == "2")
+                        {
+                            system("CLS");
+                            cout << "\n\t\t ______________________________________________\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t| [1]   |     Car" << setw(32) << "|\n";
+                            cout << "\t\t| [2]   |     Bus" << setw(32) << "|\n";
+                            cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
+                            cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                            cout << "\t\t|       |" << setw(40) << "|\n";
+                            cout << "\t\t|_______|______________________________________|\n";
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter your choice: ";
+                                getline(cin, data);
+                                if (parking.menuChoice(data))
+                                {
+                                    break;
+                                }
+                                cout << "\n\t\tInvalid input.\n";
+                            }
+                            if (data == "1")
+                            {
+                                parking.displayUnparkedCars();
+                            }
+                            else if (data == "2")
+                            {
+                                parking.displayUnparkedBuses();
+                            }
+                            else if (data == "3")
+                            {
+                                parking.displayUnparkedBikes();
+                            }
+                            else if (data == "0")
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                system("CLS");
+                                cout << "\n\t\tInvalid choice.\n";
+                            }
+                        }
+                        else if (data == "0")
+                        {
+                            system("CLS");
+                            break;
+                        }
+                        else
+                        {
+                            system("CLS");
+                            cout << "\n\t\tInvalid choice!\n";
+                        }
+                    }
+                }
+
+                else if (admin == "2")
+                {
+                    string delRec;
+                    cout << "\n\t\t ______________________________________________\n";
+                    cout << "\t\t|       |" << setw(40) << "|\n";
+                    cout << "\t\t|       |" << setw(40) << "|\n";
+                    cout << "\t\t| [1]   |     Delete Park Record" << setw(17) << "|\n";
+                    cout << "\t\t| [2]   |     Delete UnPark Record" << setw(15) << "|\n";
+                    cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                    cout << "\t\t|       |" << setw(40) << "|\n";
+                    cout << "\t\t|_______|______________________________________|\n";
+                    while (true)
+                    {
+                        cout << "\n\t\tEnter your choice: ";
+                        getline(cin, delRec);
+                        if (parking.menuChoice(delRec))
+                        {
+                            break;
+                        }
+                        cout << "\n\t\tInvalid input.\n";
+                    }
+                    if (delRec == "1")
+                    {
+                        string delRecord;
+                        string PlateNo;
+                        cout << "\n\t\t ______________________________________________\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t| [1]   |     Delete Specific Car Record" << setw(9) << "|\n";
+                        cout << "\t\t| [2]   |     Delete Specific Bus Record" << setw(9) << "|\n";
+                        cout << "\t\t| [3]   |     Delete Specific Bike Record" << setw(8) << "|\n";
+                        cout << "\t\t| [4]   |     Delete All Park Record" << setw(13) << "|\n";
+                        cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
+                        while (true)
+                        {
+                            cout << "\n\t\tEnter your choice: ";
+                            getline(cin, delRecord);
+                            if (parking.menuChoice(delRecord))
+                            {
+                                break;
+                            }
+                            cout << "\n\t\tInvalid input.\n";
+                        }
+                        if (delRecord == "1")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of car to delete record : ";
+                                getline(cin, PlateNo);
+                                parking.upperCase(PlateNo);
+                                if (parking.plateNoValidation(PlateNo))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteParkedCar(PlateNo);
+                        }
+                        else if (delRecord == "2")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of bus to delele record : ";
+                                getline(cin, PlateNo);
+                                parking.upperCase(PlateNo);
+                                if (parking.plateNoValidation(PlateNo))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteParkedBus(PlateNo);
+                        }
+                        else if (delRecord == "3")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of bike to delete record : ";
+                                getline(cin, PlateNo);
+                                parking.upperCase(PlateNo);
+                                if (parking.plateNoValidation(PlateNo))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteParkedBike(PlateNo);
+                        }
+                        else if (delRecord == "4")
+                        {
+                            parking.deleteParkedRecords();
+                        }
+                        else if (delRecord == "0")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            system("CLS");
+                            cout << "\n\t\tInvalid choice!\n";
+                        }
+                    }
+                    else if (delRec == "2")
+                    {
+                        string delReco;
+                        string Plate;
+                        cout << "\n\t\t ______________________________________________\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t| [1]   |     Delete Specific Car Record" << setw(9) << "|\n";
+                        cout << "\t\t| [2]   |     Delete Specific Bus Record" << setw(9) << "|\n";
+                        cout << "\t\t| [3]   |     Delete Specific Bike Record" << setw(8) << "|\n";
+                        cout << "\t\t| [4]   |     Delete All UnPark Record" << setw(11) << "|\n";
+                        cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
+                        while (true)
+                        {
+                            cout << "\n\t\tEnter your choice: ";
+                            getline(cin, delReco);
+                            if (parking.menuChoice(delReco))
+                            {
+                                break;
+                            }
+                            cout << "\n\t\tInvalid input.\n";
+                        }
+                        if (delReco == "1")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of car to delete record : ";
+                                getline(cin, Plate);
+                                parking.upperCase(Plate);
+                                if (parking.plateNoValidation(Plate))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteUnparkedCar(Plate);
+                        }
+                        else if (delReco == "2")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of bike to delete record : ";
+                                getline(cin, Plate);
+                                parking.upperCase(Plate);
+                                if (parking.plateNoValidation(Plate))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteUnparkedBus(Plate);
+                        }
+                        else if (delReco == "3")
+                        {
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate number of bike to delete record : ";
+                                getline(cin, Plate);
+                                parking.upperCase(Plate);
+                                if (parking.plateNoValidation(Plate))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            parking.deleteUnparkedBike(Plate);
+                        }
+                        else if (delReco == "4")
+                        {
+                            parking.deleteUnParkedRecords();
+                        }
+                        else if (delReco == "0")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            system("CLS");
+                            cout << "\n\t\tInvalid choice!\n";
+                        }
+                    }
+                    else if (delRec == "0")
+                    {
+                        system("CLS");
+                        break;
+                    }
+                    else
+                    {
+                        system("CLS");
+                        cout << "\n\t\tInvalid choice!\n";
+                    }
+                }
+
+                else if (admin == "3")
+                {
+                    while (true)
+                    {
+                        string block;
+                        cout << "\n\t\t ______________________________________________\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t| [1]   |     UnBlock Vehicle " << setw(19) << "|\n";
+                        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
+                        while (true)
+                        {
+                            cout << "\n\t\tEnter your choice: ";
+                            getline(cin, block);
+                            if (parking.menuChoice(block))
+                            {
+                                break;
+                            }
+                            cout << "\n\t\tInvalid input.\n";
+                        }
+                        if (block == "1")
+                        {
+                            system("CLS");
+                            string plateno;
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the plate no to unblock the vehicle: ";
+                                getline(cin, plateno);
+                                parking.upperCase(plateno);
+                                if (parking.plateNoValidation(plateno))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid plate no\n";
+                                }
+                            }
+                            while (true)
+                            {
+                                cout << "\n\t\tEnter the token to unblock the vehicle: ";
+                                getline(cin, tokenStr);
+                                if (parking.tokenValid(tokenStr))
+                                {
+                                    token = stoi(tokenStr);
+                                    break;
+                                }
+                                cout << "\n\t\tInvalid token.\n";
+                            }
+                            parking.unblockVehicle(plateno, token);
+                        }
+                        else if (block == "0")
+                        {
+                            system("CLS");
+                            break;
+                        }
+                        else
+                        {
+                            system("CLS");
+                            cout << "\n\t\tInvalid choice.\n";
+                        }
+                    }
+                }
+
+                else if (admin == "4")
+                {
+                    system("CLS");
+                    setRates(parking);
+                }
+                else if (admin == "5")
+                {
+                    string pay;
+                    while (true)
+                    {
+                        cout << "\n\t\t ______________________________________________\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t| [1]   |     Display AllPayment Record " << setw(9) << "|\n";
+                        cout << "\t\t| [2]   |     Withdraw Money " << setw(20) << "|\n";
+                        cout << "\t\t| [3]   |     Delete Specific Payment Record" << setw(5) << "|\n";
+                        cout << "\t\t| [4]   |     Delete AllPayment Record" << setw(11) << "|\n";
+                        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                        cout << "\t\t|       |" << setw(40) << "|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
+                        while (true)
+                        {
+                            cout << "\n\t\tEnter your choice: ";
+                            getline(cin, pay);
+                            if (parking.menuChoice(pay))
+                            {
+                                break;
+                            }
+                            cout << "\n\t\tInvalid input.\n";
+                        }
+                        if (pay == "1")
+                        {
+                            system("CLS");
+                            parking.Payments();
+                        }
+                        else if (pay == "2")
+                        {
+                            system("CLS");
+                            parking.withDraw(adminPassword);
+                        }
+                        else if (pay == "3")
+                        {
+                            string plateNo, vehicleType;
+                            while (true)
+                            {
+                                system("cls");
+                                cout << "\n\t\tEnter the plate number of vehicle to delete records along : ";
+                                getline(cin, plateNo);
+                                parking.upperCase(plateNo);
+                                if (parking.plateNoValidation(plateNo))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    cout << "\n\t\tInvalid input\n";
+                                }
+                            }
+                            cout << "Enter the type of vehicle (Car/Bus/Bike): ";
+                            getline(cin, vehicleType);
+                            parking.deleteSpecificPaymentRecord(plateNo, vehicleType);
+                        }
+                        else if (pay == "4")
+                        {
+                            system("CLS");
+                            parking.deletePayRecords();
+                        }
+                        else if (pay == "0")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            cout << "\n\t\tInvalid choice!\n";
+                        }
+                    }
+                }
+
+                else if (admin == "6")
+                {
+                    changeAdminPassword(adminPassword, parking);
+                }
+
+                else if (admin == "7")
+                {
+                    system("cls");
+                    // Manual password reset logic
+                    string resetConfirmation;
+                    cout << "\nAre you sure you want to reset the password? (Y / N): ";
+                    getline(cin, resetConfirmation);
+                    if (resetConfirmation == "y" || resetConfirmation == "Y")
+                    {
+                        system("cls");
+                        adminPassword = ""; // Reset to default password
+                        cout << "\nPassword reset successfully! Please set new Password.\n";
+
+                        // Set firstAccess to true to prompt for a new password
+                        firstAccess = true;
+                        break; // Exit to prompt for new password
+                    }
+                    else
+                    {
+                        system("cls");
+                        cout << "\nPassword reset cancelled.\n";
+                    }
+                }
+                else if (admin == "0")
+                {
+                    system("CLS");
+                    break;
+                }
+                else
+                {
+                    system("CLS");
+                    cout << "\n\t\tInvalid choice!\n";
+                }
+            }
+            break;
+        }
+        else
+        {
+            adminAttempt++;
+            if (adminAttempt >= 3)
+            {
+                system("CLS");
+                cout << "\n\t\tYou attempted the password many times. Please wait.\n";
+                break;
+            }
+            else
+            {
+                cout << "\n\t\tInvalid Passcode. Try Again!\n";
+            }
+        }
+    }
+}
+
+int main()
+
+{
+    string adminPassword = "";
+    string choice;
+    ParkAndUnPark ParkingSystem;
+    system("CLS");
+
+    cout << "\n\n\t\tWelcome to the Vehicle Management System\n\n";
+    while (true)
+    {
+        cout << "\n\t\t ______________________________________________\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t| [1]   |     User" << setw(31) << "|\n";
+        cout << "\t\t| [2]   |     Admin" << setw(30) << "|\n";
+        cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
+        cout << "\t\t|       |" << setw(40) << "|\n";
+        cout << "\t\t|_______|______________________________________|\n";
+        while (true)
+        {
+            cout << "\n\t\tEnter your choice: ";
+            getline(cin, choice);
+            if (ParkingSystem.menuChoice(choice))
+            {
+                break;
+            }
+            cout << "\n\t\tInvalid input.\n";
+        }
+        if (choice == "1")
+        {
+            system("CLS");
+            userInterface(ParkingSystem);
+        }
+        else if (choice == "2")
+        {
+            system("CLS");
+            adminInterface(ParkingSystem, adminPassword);
+        }
+        else if (choice == "0")
+        {
+            cout << "\n\n\t\tThanks for using......\n\n\n";
+            break;
+        }
+        else
+        {
+            system("CLS");
+            cout << "\n\t\tInvalid choice!\n";
+        }
+    }
+    return 0;
+}

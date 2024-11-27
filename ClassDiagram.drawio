@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="oVIlP2WVnz6kb_MlFQTz" name="Page-1">
-        <mxGraphModel dx="2611" dy="1898" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2441" dy="1898" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <object label="" id="0">
                     <mxCell/>
@@ -545,7 +545,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="l_bYTn5K-WHywQLocLNn-304" value="&lt;h4 style=&quot;border-color: var(--border-color); font-family: &amp;quot;Architects Daughter&amp;quot;; font-size: 20px;&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;PaymentRecords&lt;/span&gt;&lt;/h4&gt;" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="l_bYTn5K-WHywQLocLNn-304" value="&lt;h4 style=&quot;border-color: var(--border-color); font-family: &amp;quot;Architects Daughter&amp;quot;; font-size: 20px;&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;PaymentRecords&lt;/span&gt;&lt;/h4&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
                     <mxGeometry x="-400" y="1890" width="460" height="540" as="geometry"/>
                 </mxCell>
                 <mxCell id="l_bYTn5K-WHywQLocLNn-305" value="+ PaymentInfo" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
@@ -581,17 +581,8 @@
                 <mxCell id="l_bYTn5K-WHywQLocLNn-316" value="- double withdraw" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
                     <mxGeometry y="240" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="l_bYTn5K-WHywQLocLNn-319" value="- timeTostring() : time_t" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
-                    <mxGeometry y="280" width="150" height="30" as="geometry"/>
-                </mxCell>
                 <mxCell id="l_bYTn5K-WHywQLocLNn-318" value="- timeTostring() : string" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
                     <mxGeometry x="5" y="260" width="140" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="l_bYTn5K-WHywQLocLNn-320" value="- saveToFile() : void" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
-                    <mxGeometry x="5" y="300" width="130" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="l_bYTn5K-WHywQLocLNn-321" value="- loadFromFile() : void" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
-                    <mxGeometry x="5" y="320" width="140" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="l_bYTn5K-WHywQLocLNn-324" value="+ paymentRecord()" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="l_bYTn5K-WHywQLocLNn-304" vertex="1">
                     <mxGeometry y="350" width="130" height="30" as="geometry"/>
