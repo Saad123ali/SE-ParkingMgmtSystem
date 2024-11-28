@@ -385,10 +385,10 @@ public:
             }
             if (parkingType == "1")
             {
+                cout<<"\n\t\tEnter hours b/w ( 1 - 24 ) \n"<<endl;
                 while (true)
                 {
                     string hourStr;
-                    cout<<"\n\tEnter hours b/w ( 1 - 24 ) \n"<<endl;
                     cout << "\n\t\tEnter the no of hours to park the Vehicle: ";
                     getline(cin, hourStr);
                     if (hoursValidation(hourStr))
@@ -402,11 +402,11 @@ public:
             }
             else if (parkingType == "2")
             {
+                cout<<"\n\t\tEnter days b/w ( 1 - 31 ) \n"<<endl;
                 while (true)
                 {
                     string dayStr;
 
-                    cout<<"\n\tEnter days b/w ( 1 - 31 ) \n"<<endl;
                     cout << "\n\t\tEnter the no of days to park the Vehicle: ";
                     getline(cin, dayStr);
                     if (daysValidation(dayStr))
@@ -424,9 +424,9 @@ public:
                 cout << "\n\t\tInvalid choice!\n";
             }
         }
+        cout<<"\n\t\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"<<endl;
         while (true)
         {
-            cout<<"\n\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"<<endl;
             cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
             getline(cin, cellNo);
             if (phoneValidation(cellNo))
@@ -435,9 +435,9 @@ public:
             }
             cout << "\n\t\tInvalid Phone no.\n";
         }
+        cout<<"\n\t\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"<<endl;
         while (true)
         {
-            cout<<"\n\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"<<endl;
             cout << "\n\t\tEnter the plate no of the Vehicle: ";
             getline(cin, plateNo);
             for (int i = 0; i < plateNo.size(); i++)
@@ -2126,7 +2126,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                 cout << "\t\t| [7]   |     Reset Password" << setw(21) << "|\n";
                 cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                 cout << "\t\t|       |" << setw(40) << "|\n";
-                cout << "\t\t||_|\n";
+                cout << "\t\t|_______|______________________________________|\n";
                 while (true)
                 {
                     cout << "\n\t\tEnter your choice: ";
@@ -2149,7 +2149,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [2]   |     Unpark Data" << setw(24) << "|\n";
                         cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t||_|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
                         while (true)
                         {
                             cout << "\n\t\tEnter your choice: ";
@@ -2171,7 +2171,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                             cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
                             cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                             cout << "\t\t|       |" << setw(40) << "|\n";
-                            cout << "\t\t||_|\n";
+                            cout << "\t\t|_______|______________________________________|\n";
                             while (true)
                             {
                                 cout << "\n\t\tEnter your choice: ";
@@ -2215,7 +2215,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                             cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
                             cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                             cout << "\t\t|       |" << setw(40) << "|\n";
-                            cout << "\t\t||_|\n";
+                            cout << "\t\t|_______|______________________________________|\n";
                             while (true)
                             {
                                 cout << "\n\t\tEnter your choice: ";
@@ -2271,7 +2271,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                     cout << "\t\t| [2]   |     Delete UnPark Record" << setw(15) << "|\n";
                     cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                     cout << "\t\t|       |" << setw(40) << "|\n";
-                    cout << "\t\t||_|\n";
+                    cout << "\t\t|_______|______________________________________|\n";
                     while (true)
                     {
                         cout << "\n\t\tEnter your choice: ";
@@ -2295,7 +2295,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [4]   |     Delete All Park Record" << setw(13) << "|\n";
                         cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t||_|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
                         while (true)
                         {
                             cout << "\n\t\tEnter your choice: ";
@@ -2387,7 +2387,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [4]   |     Delete All UnPark Record" << setw(11) << "|\n";
                         cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t||_|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
                         while (true)
                         {
                             cout << "\n\t\tEnter your choice: ";
@@ -2489,7 +2489,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [1]   |     UnBlock Vehicle " << setw(19) << "|\n";
                         cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t||_|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
                         while (true)
                         {
                             cout << "\n\t\tEnter your choice: ";
@@ -2563,7 +2563,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [4]   |     Delete AllPayment Record" << setw(11) << "|\n";
                         cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t||_|\n";
+                        cout << "\t\t|_______|______________________________________|\n";
                         while (true)
                         {
                             cout << "\n\t\tEnter your choice: ";
