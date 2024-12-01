@@ -81,10 +81,10 @@ public:
                 return true;
             }
         }
-        else if(plateNo.length() == 7)
+        else if (plateNo.length() == 7)
         {
-            if(isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
-            isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[3]) && isdigit(plateNo[4]))
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
+                isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[3]) && isdigit(plateNo[4]))
             {
                 return true;
             }
@@ -385,7 +385,8 @@ public:
             }
             if (parkingType == "1")
             {
-                cout<<"\n\t\tEnter hours b/w ( 1 - 24 ) \n"<<endl;
+                cout << "\n\t\tEnter hours b/w ( 1 - 24 ) \n"
+                     << endl;
                 while (true)
                 {
                     string hourStr;
@@ -402,7 +403,8 @@ public:
             }
             else if (parkingType == "2")
             {
-                cout<<"\n\t\tEnter days b/w ( 1 - 31 ) \n"<<endl;
+                cout << "\n\t\tEnter days b/w ( 1 - 31 ) \n"
+                     << endl;
                 while (true)
                 {
                     string dayStr;
@@ -424,7 +426,8 @@ public:
                 cout << "\n\t\tInvalid choice!\n";
             }
         }
-        cout<<"\n\t\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"<<endl;
+        cout << "\n\t\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"
+             << endl;
         while (true)
         {
             cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
@@ -435,7 +438,8 @@ public:
             }
             cout << "\n\t\tInvalid Phone no.\n";
         }
-        cout<<"\n\t\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"<<endl;
+        cout << "\n\t\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"
+             << endl;
         while (true)
         {
             cout << "\n\t\tEnter the plate no of the Vehicle: ";
@@ -905,7 +909,7 @@ public:
         }
 
         cout << "\n***********************************************************************************************************************************************\n";
-        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\t"<< "Parked Vehicles: " << parkedCount << "\t"<<"Unparked Vehicles: " << unparkedCount<< "\n";
+        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\t" << "Parked Vehicles: " << parkedCount << "\t" << "Unparked Vehicles: " << unparkedCount << "\n";
     }
 
     void deleteAllRecords()
@@ -2822,7 +2826,6 @@ void userInterface(ParkAndUnPark &parking)
         }
     }
 }
-
 
 int main()
 
