@@ -81,10 +81,10 @@ public:
                 return true;
             }
         }
-        else if(plateNo.length() == 7)
+        else if (plateNo.length() == 7)
         {
-            if(isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
-            isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[3]) && isdigit(plateNo[4]))
+            if (isalpha(plateNo[0]) && isalpha(plateNo[1]) && isalpha(plateNo[2]) &&
+                isdigit(plateNo[3]) && isdigit(plateNo[4]) && isdigit(plateNo[3]) && isdigit(plateNo[4]))
             {
                 return true;
             }
@@ -385,7 +385,8 @@ public:
             }
             if (parkingType == "1")
             {
-                cout<<"\n\t\tEnter hours b/w ( 1 - 24 ) \n"<<endl;
+                cout << "\n\t\tEnter hours b/w ( 1 - 24 ) \n"
+                     << endl;
                 while (true)
                 {
                     string hourStr;
@@ -402,7 +403,8 @@ public:
             }
             else if (parkingType == "2")
             {
-                cout<<"\n\t\tEnter days b/w ( 1 - 31 ) \n"<<endl;
+                cout << "\n\t\tEnter days b/w ( 1 - 31 ) \n"
+                     << endl;
                 while (true)
                 {
                     string dayStr;
@@ -424,7 +426,8 @@ public:
                 cout << "\n\t\tInvalid choice!\n";
             }
         }
-        cout<<"\n\t\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"<<endl;
+        cout << "\n\t\tEnter Phone No Format ( 03XX-XXXXXXX ) \n"
+             << endl;
         while (true)
         {
             cout << "\n\t\tEnter the (11 digit) Phone Number of the Vehicle holder: ";
@@ -435,7 +438,8 @@ public:
             }
             cout << "\n\t\tInvalid Phone no.\n";
         }
-        cout<<"\n\t\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"<<endl;
+        cout << "\n\t\tEnter PlateNo Format ( ABC123, A1234B, ABCD12, ABC1234, ABC12DEF, AB123CD ) \n"
+             << endl;
         while (true)
         {
             cout << "\n\t\tEnter the plate no of the Vehicle: ";
@@ -794,7 +798,6 @@ private:
     };
 
     unordered_map<string, PaymentInfo> payments;
-    unordered_map<string, PaymentInfo> backupPayments; // Backup for deleted records
     double totalAmount;
     int parkedCount;
     int unparkedCount;
@@ -813,7 +816,17 @@ public:
 
     void recordPayment(const string &plateNo, const string &vehicleType, int token, double amount, time_t parkTime, time_t unparkTime, bool isPaid, const string &cellNumber)
     {
-        string key = vehicleType + "-" + plateNo;
+        string keyBase = vehicleType + " " + plateNo;
+        string key = keyBase;
+
+        // Ensure unique key by appending a counter if necessary
+        int counter = 1;
+        while (payments.find(key) != payments.end())
+        {
+            key = keyBase + "-" + std::to_string(counter);
+            counter++;
+        }
+
         payments[key] = {token, amount, isPaid, parkTime, unparkTime, vehicleType, cellNumber};
 
         if (isPaid)
@@ -829,45 +842,38 @@ public:
 
     void updatePaymentRecord(const string &plateNo, const string &vehicleType, int token, double amount, time_t unparkTime)
     {
-        string key = vehicleType + "-" + plateNo;
-        auto it = payments.find(key);
-        if (it != payments.end() && it->second.token == token)
-        {
-            if (!it->second.paid) // If previously unpaid
-            {
-                parkedCount--;   // Decrement parked count
-                unparkedCount++; // Increment unparked count
-            }
+        string keyBase = vehicleType + " " + plateNo;
+        bool recordFound = false;
 
-            it->second.paid = true;
-            it->second.unparkTime = unparkTime;
-            totalAmount += amount;
-        }
-        else
+        for (int counter = 0;; counter++)
         {
-            auto backupIt = backupPayments.find(key);
-            if (backupIt != backupPayments.end() && backupIt->second.token == token)
-            {
-                // Restore from backup
-                payments[key] = backupIt->second;
-                backupPayments.erase(backupIt);
+            string key = (counter == 0) ? keyBase : keyBase + "-" + std::to_string(counter);
 
-                if (!payments[key].paid) // If previously unpaid
+            auto it = payments.find(key);
+            if (it != payments.end() && it->second.token == token)
+            {
+                recordFound = true;
+
+                if (!it->second.paid) // If previously unpaid
                 {
                     parkedCount--;   // Decrement parked count
                     unparkedCount++; // Increment unparked count
                 }
 
-                payments[key].paid = true;
-                payments[key].unparkTime = unparkTime;
+                it->second.paid = true;
+                it->second.unparkTime = unparkTime;
                 totalAmount += amount;
-
-                cout << "Record restored from backup and updated successfully." << endl;
+                break;
             }
-            else
+            if (it == payments.end() && counter > 0) // Break if no more records with appended numbers are found
             {
-                cout << "No payment record found for plate number " << plateNo << " and vehicle type " << vehicleType << " with token " << token << "." << endl;
+                break;
             }
+        }
+
+        if (!recordFound)
+        {
+            cout << "No payment record found for plate number " << plateNo << " and vehicle type " << vehicleType << " with token " << token << "." << endl;
         }
     }
 
@@ -887,7 +893,7 @@ public:
         {
             const PaymentInfo &info = entry.second;
             cout << setw(10) << info.vehicleType
-                 << setw(12) << entry.first.substr(entry.first.find('-') + 1) // Extract plate number from key
+                 << setw(12) << entry.first.substr(entry.first.find(' ') + 1) // Extract plate number from key
                  << setw(18) << info.token
                  << setw(12) << "Rs : " << info.amount << setw(10) << (info.paid ? "Yes" : "No")
                  << setw(32) << timeTostring(info.parkTime); // Park Time
@@ -905,7 +911,7 @@ public:
         }
 
         cout << "\n***********************************************************************************************************************************************\n";
-        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\t"<< "Parked Vehicles: " << parkedCount << "\t"<<"Unparked Vehicles: " << unparkedCount<< "\n";
+        cout << "\n\tTotal Amount: Rs : " << totalAmount << "\t" << "Parked Vehicles: " << parkedCount << "\t" << "Unparked Vehicles: " << unparkedCount << "\n";
     }
 
     void deleteAllRecords()
@@ -916,39 +922,65 @@ public:
             return;
         }
 
-        // Backup records before deletion
-        backupPayments = payments;
-        payments.clear();
-        totalAmount = 0.0;
-        parkedCount = 0;
-        unparkedCount = 0;
-        // cout << "All payment records have been deleted and backed up." << endl;
-        cout << "All payment records have been deleted." << endl;
+        bool hasPaidRecords = false;
+        for (auto it = payments.begin(); it != payments.end();)
+        {
+            if (it->second.paid)
+            {
+                it = payments.erase(it);
+                unparkedCount--;
+                hasPaidRecords = true;
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        if (hasPaidRecords)
+        {
+            cout << "All paid payment records have been deleted." << endl;
+        }
+        else
+        {
+            cout << "No paid payment records to delete." << endl;
+        }
     }
 
     void deleteSpecificRecord(const string &plateNo, const string &vehicleType)
     {
-        string key = vehicleType + "-" + plateNo;
-        auto it = payments.find(key);
-        if (it != payments.end())
+        string keyBase = vehicleType + " " + plateNo;
+        bool recordFound = false;
+
+        for (int counter = 0;; counter++)
         {
-            // Backup the record before deletion
-            backupPayments[key] = it->second;
+            string key = (counter == 0) ? keyBase : keyBase + "-" + std::to_string(counter);
 
-            if (!it->second.paid)
+            auto it = payments.find(key);
+            if (it != payments.end())
             {
-                parkedCount--;
+                if (!it->second.paid)
+                {
+                    cout << "Cannot delete unpaid payment record for plate number " << plateNo << "." << endl;
+                    return;
+                }
+                else
+                {
+                    unparkedCount--;
+                    totalAmount -= it->second.amount;
+                    payments.erase(it);
+                    recordFound = true;
+                    cout << "Paid payment record for plate number " << plateNo << " has been deleted." << endl;
+                    break;
+                }
             }
-            else
+            if (it == payments.end() && counter > 0) // Break if no more records with appended numbers are found
             {
-                unparkedCount--;
+                break;
             }
-
-            totalAmount -= it->second.amount;
-            payments.erase(it);
-            // cout << "Payment record for plate number " << plateNo << " has been deleted and backed up." << endl;
         }
-        else
+
+        if (!recordFound)
         {
             cout << "No payment record found for plate number " << plateNo << "." << endl;
         }
@@ -1117,15 +1149,6 @@ class ParkAndUnPark : public ErrorHandling
         return blockedVehicles.find(key) != blockedVehicles.end();
     }
 
-    void removePlateNumber(const string &plateNo)
-    {
-        auto it = find(parkedPlateNumbers.begin(), parkedPlateNumbers.end(), plateNo);
-        if (it != parkedPlateNumbers.end())
-        {
-            parkedPlateNumbers.erase(it);
-        }
-    }
-
 public:
     ParkAndUnPark() : payment()
     {
@@ -1219,10 +1242,9 @@ public:
     // Unpark logic with blocking after failed attempts
     void unparkCar()
     {
-        int plateAttempts = 0;
-        int tokenAttempts = 0;
-        string unParkToken;
-        bool found = false;
+        plateAttempts = 0;
+        tokenAttempts = 0;
+        found = false;
         auto carIt = cars.end();
 
         if (cars.empty())
@@ -1307,8 +1329,9 @@ public:
                         carIt->second.setUnparkTime(unparkTime);
                         payment.updatePaymentRecord(carIt->second.getPlateNo(), "Car", token, carIt->second.getAmount(), carIt->second.getUnparkTime());
 
-                        // Move to unparkedCars and remove from parked
-                        unparkedCars[plateNumber] = carIt->second;
+                        // Generate unique key for unpark records
+                        string unparkKey = plateNumber + "-" + to_string(unparkedCars.size() + 1) + "-" + to_string(unparkTime);
+                        unparkedCars[unparkKey] = carIt->second;
                         cars.erase(carIt);
 
                         cout << "\n\t\tCar unparked successfully!\n";
@@ -1426,9 +1449,11 @@ public:
                             busIt->second.setUnparkTime(unparkTime);
                             payment.updatePaymentRecord(busIt->second.getPlateNo(), "Bus", token, busIt->second.getAmount(), busIt->second.getUnparkTime());
 
-                            unparkedBuses[plateNumber] = busIt->second;
+                            // Generate unique key for unpark records
+                            string unparkKey = plateNumber + "-" + to_string(unparkedBuses.size() + 1) + "-" + to_string(unparkTime);
+                            unparkedBuses[unparkKey] = busIt->second;
                             buses.erase(busIt);
-                            removePlateNumber(plateNumber);
+
                             cout << "\n\t\tBus unparked successfully!\n";
                             return;
                         }
@@ -1545,9 +1570,10 @@ public:
                             bikeIt->second.setUnparkTime(unparkTime);
                             payment.updatePaymentRecord(bikeIt->second.getPlateNo(), "Bike", token, bikeIt->second.getAmount(), bikeIt->second.getUnparkTime());
 
-                            unparkedBikes[plateNumber] = bikeIt->second;
+                            // Generate unique key for unpark records
+                            string unparkKey = plateNumber + "-" + to_string(unparkedBikes.size() + 1) + "-" + to_string(unparkTime);
+                            unparkedBikes[unparkKey] = bikeIt->second;
                             bikes.erase(bikeIt);
-                            removePlateNumber(plateNumber);
                             cout << "\n\t\tBike unparked successfully!\n";
                             return;
                         }
@@ -1784,21 +1810,6 @@ public:
         payment.deleteSpecificRecord(plateNo, vehicleType);
     }
 
-    void deleteParkedCar(const string &plateNo)
-    {
-        deleteRecord(cars, plateNo);
-    }
-
-    void deleteParkedBus(const string &plateNo)
-    {
-        deleteRecord(buses, plateNo);
-    }
-
-    void deleteParkedBike(const string &plateNo)
-    {
-        deleteRecord(bikes, plateNo);
-    }
-
     void deleteUnparkedCar(const string &plateNo)
     {
         deleteRecord(unparkedCars, plateNo);
@@ -1812,21 +1823,6 @@ public:
     void deleteUnparkedBike(const string &plateNo)
     {
         deleteRecord(unparkedBikes, plateNo);
-    }
-
-    void deleteAllParkedCars()
-    {
-        deleteAllRecords(cars, "parked cars");
-    }
-
-    void deleteAllParkedBuses()
-    {
-        deleteAllRecords(buses, "parked buses");
-    }
-
-    void deleteAllParkedBikes()
-    {
-        deleteAllRecords(bikes, "parked bikes");
     }
 
     void deleteAllUnparkedCars()
@@ -1844,20 +1840,36 @@ public:
         deleteAllRecords(unparkedBikes, "unparked bikes");
     }
 
-    void deleteParkedRecords()
-    {
-        deleteAllParkedCars();
-        deleteAllParkedBuses();
-        deleteAllParkedBikes();
-        cout << "\n\t\tAll parked vehicle records have been deleted.\n";
-    }
-
     void deleteUnParkedRecords()
     {
-        deleteAllUnparkedCars();
-        deleteAllUnparkedBuses();
-        deleteAllUnparkedBikes();
-        cout << "\n\t\tAll unparked vehicle records have been deleted.\n";
+        bool anyRecordsDeleted = false;
+
+        if (!unparkedCars.empty())
+        {
+            unparkedCars.clear();
+            anyRecordsDeleted = true;
+        }
+
+        if (!unparkedBuses.empty())
+        {
+            unparkedBuses.clear();
+            anyRecordsDeleted = true;
+        }
+
+        if (!unparkedBikes.empty())
+        {
+            unparkedBikes.clear();
+            anyRecordsDeleted = true;
+        }
+
+        if (anyRecordsDeleted)
+        {
+            cout << "\n\t\tAll unparked vehicle records have been deleted.\n";
+        }
+        else
+        {
+            cout << "\n\t\tNo unparked vehicle records found to delete.\n";
+        }
     }
 };
 
@@ -2082,28 +2094,11 @@ void setRates(ParkAndUnPark &parking)
 void adminInterface(ParkAndUnPark &parking, string &adminPassword)
 {
     // Main admin menu
-    static bool firstAccess = true; // To check if it's the first access
     int adminAttempt = 0;
-    string newPassword;
     while (true)
     {
         string passcode;
-        if (firstAccess)
-        {
-            firstAccess = false;
-            while (true)
-            {
-                cout << "\n";
-                parking.passLogic(newPassword, "Please set a new admin password: ");
-                if (parking.passwordValidation(newPassword))
-                {
-                    adminPassword = newPassword;
-                    cout << "\nPassword set successfully! Please login with the new password.\n";
-                    break;
-                }
-                continue; // Prompt for password again with new password
-            }
-        }
+
         parking.passLogic(passcode, "Enter the passcode to access the administration: ");
         if (passcode == adminPassword)
         {
@@ -2123,7 +2118,6 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                 cout << "\t\t| [4]   |     Set Parking Rates" << setw(18) << "|\n";
                 cout << "\t\t| [5]   |     Payment Record" << setw(21) << "|\n";
                 cout << "\t\t| [6]   |     Change Password" << setw(20) << "|\n";
-                cout << "\t\t| [7]   |     Reset Password" << setw(21) << "|\n";
                 cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                 cout << "\t\t|       |" << setw(40) << "|\n";
                 cout << "\t\t|_______|______________________________________|\n";
@@ -2196,6 +2190,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                             }
                             else if (data == "0")
                             {
+                                system("CLS");
                                 break;
                             }
                             else
@@ -2240,6 +2235,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                             }
                             else if (data == "0")
                             {
+                                system("CLS");
                                 break;
                             }
                             else
@@ -2263,121 +2259,11 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
 
                 else if (admin == "2")
                 {
-                    string delRec;
-                    cout << "\n\t\t ______________________________________________\n";
-                    cout << "\t\t|       |" << setw(40) << "|\n";
-                    cout << "\t\t|       |" << setw(40) << "|\n";
-                    cout << "\t\t| [1]   |     Delete Park Record" << setw(17) << "|\n";
-                    cout << "\t\t| [2]   |     Delete UnPark Record" << setw(15) << "|\n";
-                    cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
-                    cout << "\t\t|       |" << setw(40) << "|\n";
-                    cout << "\t\t|_______|______________________________________|\n";
+
+                    string delReco;
+                    string Plate;
                     while (true)
                     {
-                        cout << "\n\t\tEnter your choice: ";
-                        getline(cin, delRec);
-                        if (parking.menuChoice(delRec))
-                        {
-                            break;
-                        }
-                        cout << "\n\t\tInvalid input.\n";
-                    }
-                    if (delRec == "1")
-                    {
-                        string delRecord;
-                        string PlateNo;
-                        cout << "\n\t\t ______________________________________________\n";
-                        cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t| [1]   |     Delete Specific Car Record" << setw(9) << "|\n";
-                        cout << "\t\t| [2]   |     Delete Specific Bus Record" << setw(9) << "|\n";
-                        cout << "\t\t| [3]   |     Delete Specific Bike Record" << setw(8) << "|\n";
-                        cout << "\t\t| [4]   |     Delete All Park Record" << setw(13) << "|\n";
-                        cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
-                        cout << "\t\t|       |" << setw(40) << "|\n";
-                        cout << "\t\t|_______|______________________________________|\n";
-                        while (true)
-                        {
-                            cout << "\n\t\tEnter your choice: ";
-                            getline(cin, delRecord);
-                            if (parking.menuChoice(delRecord))
-                            {
-                                break;
-                            }
-                            cout << "\n\t\tInvalid input.\n";
-                        }
-                        if (delRecord == "1")
-                        {
-                            while (true)
-                            {
-                                cout << "\n\t\tEnter the plate number of car to delete record : ";
-                                getline(cin, PlateNo);
-                                parking.upperCase(PlateNo);
-                                if (parking.plateNoValidation(PlateNo))
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    cout << "\n\t\tInvalid input\n";
-                                }
-                            }
-                            parking.deleteParkedCar(PlateNo);
-                        }
-                        else if (delRecord == "2")
-                        {
-                            while (true)
-                            {
-                                cout << "\n\t\tEnter the plate number of bus to delele record : ";
-                                getline(cin, PlateNo);
-                                parking.upperCase(PlateNo);
-                                if (parking.plateNoValidation(PlateNo))
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    cout << "\n\t\tInvalid input\n";
-                                }
-                            }
-                            parking.deleteParkedBus(PlateNo);
-                        }
-                        else if (delRecord == "3")
-                        {
-                            while (true)
-                            {
-                                cout << "\n\t\tEnter the plate number of bike to delete record : ";
-                                getline(cin, PlateNo);
-                                parking.upperCase(PlateNo);
-                                if (parking.plateNoValidation(PlateNo))
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    cout << "\n\t\tInvalid input\n";
-                                }
-                            }
-                            parking.deleteParkedBike(PlateNo);
-                        }
-                        else if (delRecord == "4")
-                        {
-                            parking.deleteParkedRecords();
-                        }
-                        else if (delRecord == "0")
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            system("CLS");
-                            cout << "\n\t\tInvalid choice!\n";
-                        }
-                    }
-                    else if (delRec == "2")
-                    {
-                        string delReco;
-                        string Plate;
                         cout << "\n\t\t ______________________________________________\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
@@ -2385,7 +2271,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         cout << "\t\t| [2]   |     Delete Specific Bus Record" << setw(9) << "|\n";
                         cout << "\t\t| [3]   |     Delete Specific Bike Record" << setw(8) << "|\n";
                         cout << "\t\t| [4]   |     Delete All UnPark Record" << setw(11) << "|\n";
-                        cout << "\t\t| [0]   |     Exit" << setw(31) << "|\n";
+                        cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
                         cout << "\t\t|       |" << setw(40) << "|\n";
                         cout << "\t\t|_______|______________________________________|\n";
                         while (true)
@@ -2458,6 +2344,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         }
                         else if (delReco == "0")
                         {
+                            system("CLS");
                             break;
                         }
                         else
@@ -2465,16 +2352,6 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                             system("CLS");
                             cout << "\n\t\tInvalid choice!\n";
                         }
-                    }
-                    else if (delRec == "0")
-                    {
-                        system("CLS");
-                        break;
-                    }
-                    else
-                    {
-                        system("CLS");
-                        cout << "\n\t\tInvalid choice!\n";
                     }
                 }
 
@@ -2549,6 +2426,7 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                     system("CLS");
                     setRates(parking);
                 }
+
                 else if (admin == "5")
                 {
                     string pay;
@@ -2586,25 +2464,85 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                         }
                         else if (pay == "3")
                         {
-                            string plateNo, vehicleType;
+                            string plateNo, type;
                             while (true)
                             {
                                 system("cls");
-                                cout << "\n\t\tEnter the plate number of vehicle to delete records along : ";
-                                getline(cin, plateNo);
-                                parking.upperCase(plateNo);
-                                if (parking.plateNoValidation(plateNo))
+                                cout << "\n\t\t ______________________________________________\n";
+                                cout << "\t\t|       |" << setw(40) << "|\n";
+                                cout << "\t\t|       |" << setw(40) << "|\n";
+                                cout << "\t\t| [1]   |     Car" << setw(32) << "|\n";
+                                cout << "\t\t| [2]   |     Bus" << setw(32) << "|\n";
+                                cout << "\t\t| [3]   |     Bike" << setw(31) << "|\n";
+                                cout << "\t\t| [0]   |     Back" << setw(31) << "|\n";
+                                cout << "\t\t|       |" << setw(40) << "|\n";
+                                cout << "\t\t|_______|______________________________________|\n";
+                                while (true)
                                 {
+                                    cout << "\n\t\tEnter your choice: ";
+                                    getline(cin, type);
+                                    if (parking.menuChoice(type))
+                                    {
+                                        break;
+                                    }
+                                    cout << "\n\t\tInvalid Type.\n";
+                                }
+                                if (type == "1")
+                                {
+                                    cout << "\n\t\tEnter the plate number of vehicle to delete records along : ";
+                                    getline(cin, plateNo);
+                                    parking.upperCase(plateNo);
+                                    if (parking.plateNoValidation(plateNo))
+                                    {
+                                        parking.deleteSpecificPaymentRecord(plateNo, "Car");
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        cout << "\n\t\tInvalid Plate No\n";
+                                    }
+                                }
+                                else if (type == "2")
+                                {
+                                    cout << "\n\t\tEnter the plate number of vehicle to delete records along : ";
+                                    getline(cin, plateNo);
+                                    parking.upperCase(plateNo);
+                                    if (parking.plateNoValidation(plateNo))
+                                    {
+                                        parking.deleteSpecificPaymentRecord(plateNo, "Bus");
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        cout << "\n\t\tInvalid Plate No\n";
+                                    }
+                                }
+                                else if (type == "3")
+                                {
+                                    cout << "\n\t\tEnter the plate number of vehicle to delete records along : ";
+                                    getline(cin, plateNo);
+                                    parking.upperCase(plateNo);
+                                    if (parking.plateNoValidation(plateNo))
+                                    {
+                                        parking.deleteSpecificPaymentRecord(plateNo, "Bike");
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        cout << "\n\t\tInvalid Plate No\n";
+                                    }
+                                }
+                                else if (type == "0")
+                                {
+                                    system("CLS");
                                     break;
                                 }
                                 else
                                 {
-                                    cout << "\n\t\tInvalid input\n";
+                                    cout << "\n\tInvalid choice!\n"
+                                         << endl;
                                 }
                             }
-                            cout << "Enter the type of vehicle (Car/Bus/Bike): ";
-                            getline(cin, vehicleType);
-                            parking.deleteSpecificPaymentRecord(plateNo, vehicleType);
                         }
                         else if (pay == "4")
                         {
@@ -2625,30 +2563,6 @@ void adminInterface(ParkAndUnPark &parking, string &adminPassword)
                 else if (admin == "6")
                 {
                     changeAdminPassword(adminPassword, parking);
-                }
-
-                else if (admin == "7")
-                {
-                    system("cls");
-                    // Manual password reset logic
-                    string resetConfirmation;
-                    cout << "\nAre you sure you want to reset the password? (Y / N): ";
-                    getline(cin, resetConfirmation);
-                    if (resetConfirmation == "y" || resetConfirmation == "Y")
-                    {
-                        system("cls");
-                        adminPassword = ""; // Reset to default password
-                        cout << "\nPassword reset successfully! Please set new Password.\n";
-
-                        // Set firstAccess to true to prompt for a new password
-                        firstAccess = true;
-                        break; // Exit to prompt for new password
-                    }
-                    else
-                    {
-                        system("cls");
-                        cout << "\nPassword reset cancelled.\n";
-                    }
                 }
                 else if (admin == "0")
                 {
@@ -2823,11 +2737,10 @@ void userInterface(ParkAndUnPark &parking)
     }
 }
 
-
 int main()
 
 {
-    string adminPassword = "";
+    string adminPassword = "pasha123";
     string choice;
     ParkAndUnPark ParkingSystem;
     system("CLS");
