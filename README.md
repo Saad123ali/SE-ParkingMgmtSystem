@@ -2,13 +2,13 @@
 
 A fully documented Parking Management System developed in C++ as a comprehensive project for a Software Engineering (SE) course. This system follows the complete Software Development Life Cycle (SDLC), including planning, analysis, design, implementation, and testing phases, to ensure an efficient and maintainable solution for managing parking spaces.
 
-![Logo](https://github.com/Saad123ali/SE-ParkingMgmtSystem/blob/main/Logo%20(2).png)
+![Logo](https://github.com/Saad123ali/SE-ParkingMgmtSystem/blob/main/Logo.png)
 
 ## Features
 
-- **Real-time Parking Space Management**: Track available and occupied parking spots.
+- **Real-time Parking Space Management**: Track available vehicles that park and un-park.
 - **Vehicle Entry/Exit Management**: Monitor and log vehicle entry and exit times.
-- **User Authentication**: Role-based access control for system security.
+- **User Authentication**: Admin access control for system security.
 - **Data Logging and Reporting**: Generate logs and reports for system monitoring.
 
 ## SDLC Phases Covered
